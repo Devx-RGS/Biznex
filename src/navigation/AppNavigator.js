@@ -9,7 +9,9 @@ import ProfileSetup2 from '../screens/auth/ProfileSetup2';
 import ProfileSetup3 from '../screens/auth/ProfileSetup3';
 import MainTabNavigator from './MainTabNavigator';
 import MemberDirectoryScreen from '../screens/MemberDirectoryScreen';
-// import MemberProfileScreen from '../screens/MemberProfileScreen';
+import MemberProfileScreen from '../screens/MemberProfileScreen';
+import PerformanceScreen from '../screens/main/PerformanceScreen';
+import SupportScreen from '../screens/main/SupportScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,7 +27,9 @@ export default function AppNavigator() {
       <Stack.Screen name="ProfileSetup3" component={ProfileSetup3} />
       <Stack.Screen name="Main"            component={MainTabNavigator} />
       <Stack.Screen name="MemberDirectory" component={MemberDirectoryScreen} />
-      {/* <Stack.Screen name="MemberProfile"   component={MemberProfileScreen} /> */}
+      <Stack.Screen name="MemberProfile"   component={MemberProfileScreen} />
+      <Stack.Screen name="Performance"     component={PerformanceScreen} />
+      <Stack.Screen name="Support"         component={SupportScreen} />
     </Stack.Navigator>
   );
 }

@@ -3,7 +3,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
 import HomeScreen from '../screens/HomeScreen';
-import { UpdatesScreen, WorldFeedScreen, EnquiriesScreen, ProfileScreen } from '../screens/main/PlaceholderScreens';
+import { UpdatesScreen, WorldFeedScreen, EnquiriesScreen } from '../screens/main/PlaceholderScreens';
+import ProfileScreen from '../screens/main/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
