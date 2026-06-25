@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TEST_OTP = '123456';
 import { colors } from '../../constants/colors';
@@ -20,13 +21,26 @@ const OTPScreen = ({ route, navigation }) => {
     }
   }, [timeLeft]);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp !== TEST_OTP) {
       setError(`Incorrect OTP. Use ${TEST_OTP} for testing.`);
       return;
     }
     setError('');
-    navigation.navigate('ProfileSetup1');
+    try {
+      const storedProfile = await AsyncStorage.getItem('userProfile');
+      if (storedProfile) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+      } else {
+        navigation.navigate('ProfileSetup1');
+      }
+    } catch (e) {
+      console.error('Failed to read profile in OTP verify:', e);
+      navigation.navigate('ProfileSetup1');
+    }
   };
 
   const handleResend = () => {

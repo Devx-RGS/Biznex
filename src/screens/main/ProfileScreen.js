@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -70,8 +72,7 @@ const EditField = ({ label, value, onChangeText, multiline = false, placeholder,
 
 // ── Main Screen ──────────────────────────────────────────────────
 export default function ProfileScreen({ navigation }) {
-  // 1. Data Model state
-  const [profile, setProfile] = useState({
+  const DEFAULT_PROFILE = {
     fullName: 'Yash Oswal',
     designation: 'Founder & Managing Director',
     businessName: 'Oswal Ventures',
@@ -92,8 +93,13 @@ export default function ProfileScreen({ navigation }) {
     certificateName: 'BizNex_GST_Certificate.pdf',
     certificateStatus: 'Verified', // 'Verified', 'Pending Review', 'Not Uploaded'
     lastRenewedDate: 'Jan 15, 2026',
-    renewalDueDate: 'Jan 15, 2027'
-  });
+    renewalDueDate: 'Jan 15, 2027',
+    savedByMembers: ['1', '2', '3', '4'],
+    savedMembers: ['2', '5'],
+  };
+
+  // 1. Data Model state
+  const [profile, setProfile] = useState(DEFAULT_PROFILE);
 
   // Edit Mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -101,6 +107,34 @@ export default function ProfileScreen({ navigation }) {
 
   // Modal display state
   const [viewCertVisible, setViewCertVisible] = useState(false);
+
+  // Load from AsyncStorage
+  const loadProfileFromStorage = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('userProfile');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const merged = { ...DEFAULT_PROFILE, ...parsed };
+        setProfile(merged);
+        setDraft(merged);
+      } else {
+        setProfile(DEFAULT_PROFILE);
+        setDraft(DEFAULT_PROFILE);
+      }
+    } catch (e) {
+      console.error('Error loading user profile:', e);
+      setProfile(DEFAULT_PROFILE);
+      setDraft(DEFAULT_PROFILE);
+    }
+  };
+
+  useEffect(() => {
+    loadProfileFromStorage();
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadProfileFromStorage();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   // Sync draft when entering edit mode
   const startEditing = () => {
@@ -112,7 +146,7 @@ export default function ProfileScreen({ navigation }) {
     setIsEditing(false);
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!draft.fullName.trim()) {
       Alert.alert('Validation Error', 'Full Name is required.');
       return;
@@ -129,10 +163,18 @@ export default function ProfileScreen({ navigation }) {
       newInitials = nameParts.map(n => n[0]).join('').slice(0, 2).toUpperCase();
     }
 
-    setProfile({
+    const updatedProfile = {
       ...draft,
       initials: newInitials
-    });
+    };
+
+    try {
+      await AsyncStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    } catch (e) {
+      console.error('Failed to save profile edits:', e);
+    }
+
+    setProfile(updatedProfile);
     setIsEditing(false);
     Alert.alert('Success', 'Profile updated successfully!');
   };
@@ -273,7 +315,12 @@ export default function ProfileScreen({ navigation }) {
                 {
                   text: 'Confirm Delete',
                   style: 'destructive',
-                  onPress: () => {
+                  onPress: async () => {
+                    try {
+                      await AsyncStorage.removeItem('userProfile');
+                    } catch (e) {
+                      console.error('Failed to delete profile:', e);
+                    }
                     navigation.reset({
                       index: 0,
                       routes: [{ name: 'Splash' }],
@@ -327,14 +374,33 @@ export default function ProfileScreen({ navigation }) {
         >
           {/* Hero Header Section */}
           <View style={s.hero}>
-            <View style={[s.avatarLarge, { backgroundColor: displayData.avatarColor }]}>
-              <Text style={s.avatarLargeTxt}>{displayData.initials}</Text>
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              disabled={!isEditing}
+              onPress={async () => {
+                let result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ['images'],
+                  allowsEditing: true,
+                  aspect: [1, 1],
+                  quality: 0.8,
+                });
+                if (!result.canceled) {
+                  handleFieldChange('profilePhoto', result.assets[0].uri);
+                }
+              }}
+              style={[s.avatarLarge, { backgroundColor: displayData.avatarColor }]}
+            >
+              {displayData.profilePhoto ? (
+                <Image source={{ uri: displayData.profilePhoto }} style={s.imageFullCircular} />
+              ) : (
+                <Text style={s.avatarLargeTxt}>{displayData.initials}</Text>
+              )}
               {isEditing && (
                 <View style={s.avatarOverlay}>
                   <Ionicons name="camera" size={20} color="#fff" />
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
             
             {!isEditing ? (
               <>
@@ -757,6 +823,7 @@ const s = StyleSheet.create({
   hero:           { backgroundColor: colors.primary, alignItems: 'center', paddingBottom: 25, borderBottomLeftRadius: 25, borderBottomRightRadius: 25 },
   avatarLarge:    { width: 90, height: 90, borderRadius: 45, justifyContent: 'center', alignItems: 'center', marginBottom: 12, borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)', position: 'relative', overflow: 'hidden' },
   avatarLargeTxt: { color: '#fff', fontSize: 32, fontFamily: 'Inter_700Bold' },
+  imageFullCircular: { width: '100%', height: '100%', borderRadius: 45 },
   avatarOverlay:  { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
   heroName:       { color: '#fff', fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
   heroDesig:      { color: colors.accent, fontSize: 14, fontFamily: 'Inter_600SemiBold', marginBottom: 12, textAlign: 'center', paddingHorizontal: 20 },

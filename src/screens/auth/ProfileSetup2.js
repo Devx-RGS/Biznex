@@ -7,7 +7,8 @@ import { typography } from '../../constants/typography';
 import PrimaryButton from '../../components/PrimaryButton';
 import StepIndicator from '../../components/StepIndicator';
 
-const ProfileSetup2 = ({ navigation }) => {
+const ProfileSetup2 = ({ route, navigation }) => {
+  const { setupData = {} } = route.params || {};
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [companyLogo, setCompanyLogo] = useState(null);
   
@@ -34,7 +35,14 @@ const ProfileSetup2 = ({ navigation }) => {
   };
 
   const handleNext = () => {
-    navigation.navigate('ProfileSetup3');
+    navigation.navigate('ProfileSetup3', {
+      setupData: {
+        ...setupData,
+        ...form,
+        profilePhoto,
+        companyLogo
+      }
+    });
   };
 
   // Mock checking valid form

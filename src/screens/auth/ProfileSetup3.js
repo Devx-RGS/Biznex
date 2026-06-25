@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import PrimaryButton from '../../components/PrimaryButton';
 import StepIndicator from '../../components/StepIndicator';
 
-const ProfileSetup3 = ({ navigation }) => {
+const ProfileSetup3 = ({ route, navigation }) => {
+  const { setupData = {} } = route.params || {};
   const [form, setForm] = useState({
     offer: '',
     lookingFor: '',
@@ -32,8 +34,39 @@ const ProfileSetup3 = ({ navigation }) => {
     setKeywords(keywords.filter(k => k !== keywordToRemove));
   };
 
-  const handleCompleteTask = () => {
-    // Final assembly logic here if necessary
+  const handleCompleteTask = async () => {
+    const nameParts = (setupData.fullName || 'Guest Member').trim().split(' ');
+    let initials = 'YO';
+    if (nameParts.length > 0) {
+      initials = nameParts.map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    }
+
+    const finalProfile = {
+      ...setupData,
+      offer: form.offer,
+      lookingFor: form.lookingFor,
+      keywords: keywords,
+      phone: setupData.whatsApp || '',
+      aboutBusiness: form.offer || '',
+      productService: form.offer || '',
+      address: setupData.city ? `${setupData.city}, India` : '',
+      avatarColor: colors.accent,
+      initials: initials,
+      certificateName: 'BizNex_GST_Certificate.pdf',
+      certificateStatus: 'Verified',
+      lastRenewedDate: 'Jan 15, 2026',
+      renewalDueDate: 'Jan 15, 2027',
+      industry: setupData.category || 'Services',
+      savedByMembers: ['1', '2', '3', '4'], // mock list of members who bookmarked this member
+      savedMembers: ['2', '5'], // mock list of bookmarked members
+    };
+
+    try {
+      await AsyncStorage.setItem('userProfile', JSON.stringify(finalProfile));
+    } catch (e) {
+      console.error('Failed to save profile in AsyncStorage:', e);
+    }
+
     navigation.reset({
       index: 0,
       routes: [{ name: 'Main' }],

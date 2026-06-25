@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -69,48 +70,126 @@ const StatusBarBackground = () => (
 );
 
 export default function PerformanceScreen({ navigation }) {
-  // 1. Data Model state (mock performance object)
-  const [performanceData] = useState({
+  const [profile, setProfile] = useState(null);
+  
+  const [testimonials] = useState([
+    { id: '1', name: 'Anjali Singh', initials: 'AS', rating: 5, date: 'June 18, 2026', text: 'Yash and his team delivered our software portal ahead of schedule. Extremely professional and communicative!' },
+    { id: '2', name: 'Vikram Joshi', initials: 'VJ', rating: 4, date: 'June 10, 2026', text: 'Highly recommended for tech consulting. Great knowledge of scalable database systems.' },
+    { id: '3', name: 'Meera Kapoor', initials: 'MK', rating: 5, date: 'May 28, 2026', text: 'Always a pleasure collaborating with Yash. A core active member of the Kandivali chapter.' },
+    { id: '4', name: 'Sameer Patel', initials: 'SP', rating: 5, date: 'May 15, 2026', text: 'Excellent business ethics and prompt responses. Handled our cloud migration project seamlessly.' },
+  ]);
+
+  const [testimonialsGivenList] = useState([
+    { id: 'g1', name: 'Rajesh Kumar', initials: 'RK', rating: 5, date: 'June 15, 2026', text: 'Great support on IT systems setup!' },
+    { id: 'g2', name: 'Anjali Singh', initials: 'AS', rating: 4, date: 'May 20, 2026', text: 'Amazing food services provided for our corporate retreat.' }
+  ]);
+
+  const [savedByMembers] = useState(['1', '2', '3', '4']);
+
+  const calculateProfileCompletion = (p) => {
+    if (!p) return 0;
+    const fields = [
+      'fullName',
+      'businessName',
+      'designation',
+      'category',
+      'city',
+      'chapter',
+      'whatsApp',
+      'email',
+      'profilePhoto',
+      'companyLogo',
+      'website',
+      'offer',
+      'lookingFor',
+      'keywords',
+      'aboutBusiness'
+    ];
+    
+    let completed = 0;
+    fields.forEach(field => {
+      if (field === 'keywords') {
+        if (Array.isArray(p.keywords) && p.keywords.length > 0) {
+          completed++;
+        }
+      } else if (p[field] && typeof p[field] === 'string' && p[field].trim() !== '') {
+        completed++;
+      } else if (p[field] && typeof p[field] !== 'string') {
+        completed++;
+      }
+    });
+
+    return Math.round((completed / fields.length) * 100);
+  };
+
+  const loadProfile = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('userProfile');
+      if (stored) {
+        setProfile(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Error loading profile in PerformanceScreen:', e);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadProfile();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const displayProfile = profile || {
     fullName: 'Yash Oswal',
-    avatarInitials: 'YO',
+    initials: 'YO',
     avatarColor: colors.accent,
     chapter: 'Kandivali',
     membershipStatus: 'Active Member',
-    
-    // Grid metrics
     profileViews: 248,
     directoryAppearances: 512,
-    profileCompletion: 85,
-    vendorSaves: 34,
+  };
+
+  const calculatedCompletion = calculateProfileCompletion(profile || displayProfile);
+  const averageRating = testimonials.length > 0 ? (testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1) : '0.0';
+
+  const performanceData = {
+    fullName: displayProfile.fullName,
+    avatarInitials: displayProfile.initials || 'YO',
+    avatarColor: displayProfile.avatarColor || colors.accent,
+    chapter: displayProfile.chapter || 'Kandivali',
+    membershipStatus: displayProfile.membershipStatus || 'Active Member',
+    
+    // Grid metrics
+    profileViews: displayProfile.profileViews || 248,
+    directoryAppearances: displayProfile.directoryAppearances || 512,
+    profileCompletion: calculatedCompletion,
+    vendorSaves: displayProfile.savedByMembers ? displayProfile.savedByMembers.length : savedByMembers.length,
     
     // Reputation stats
-    averageRating: 4.8,
-    totalReviews: 24,
-    testimonialsGiven: 8,
-    testimonialsReceived: 12,
+    averageRating: averageRating,
+    totalReviews: testimonials.length,
+    testimonialsGiven: displayProfile.testimonialsGivenList ? displayProfile.testimonialsGivenList.length : testimonialsGivenList.length,
+    testimonialsReceived: testimonials.length,
     
     // Testimonials details
-    testimonials: [
-      { id: '1', name: 'Anjali Singh', initials: 'AS', rating: 5, date: 'June 18, 2026', text: 'Yash and his team delivered our software portal ahead of schedule. Extremely professional and communicative!' },
-      { id: '2', name: 'Vikram Joshi', initials: 'VJ', rating: 4, date: 'June 10, 2026', text: 'Highly recommended for tech consulting. Great knowledge of scalable database systems.' },
-      { id: '3', name: 'Meera Kapoor', initials: 'MK', rating: 5, date: 'May 28, 2026', text: 'Always a pleasure collaborating with Yash. A core active member of the Kandivali chapter.' },
-      { id: '4', name: 'Sameer Patel', initials: 'SP', rating: 5, date: 'May 15, 2026', text: 'Excellent business ethics and prompt responses. Handled our cloud migration project seamlessly.' },
-    ],
+    testimonials: testimonials,
     
     // Achievements list
     achievements: [
       { id: '1', title: 'Rising Networker', icon: 'trending-up', desc: 'Visibility grew by 40%' },
-      { id: '2', title: 'Highly Rated', icon: 'star', desc: 'Consistent 4.8★ reviews' },
+      { id: '2', title: 'Highly Rated', icon: 'star', desc: `Consistent ${averageRating}★ reviews` },
       { id: '3', title: 'Trusted Vendor', icon: 'shield-checkmark', desc: 'Documents verified by board' },
     ],
     
     // Recent logs
     recentActivities: [
-      { id: '1', title: 'New Testimonial Received', desc: 'Received a 5-star review from Anjali Singh', time: '5h ago', icon: 'chatbubble-ellipses-outline' },
+      { id: '1', title: 'New Testimonial Received', desc: `Received a 5-star review from ${testimonials[0]?.name || 'a Member'}`, time: '5h ago', icon: 'chatbubble-ellipses-outline' },
       { id: '2', title: 'Profile View Milestone', desc: 'Passed 200 total business profile views!', time: '2 days ago', icon: 'eye-outline' },
       { id: '3', title: 'Saved by a Member', desc: 'A new member bookmarked your service profile', time: '3 days ago', icon: 'bookmark-outline' },
     ]
-  });
+  };
 
   // Modal toggle state for testimonials list view
   const [testimonialsModalVisible, setTestimonialsModalVisible] = useState(false);

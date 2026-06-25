@@ -39,7 +39,7 @@ const ProfileSetup1 = ({ navigation }) => {
   const updateForm = (key, value) => setForm({ ...form, [key]: value });
 
   const handleNext = () => {
-    navigation.navigate('ProfileSetup2');
+    navigation.navigate('ProfileSetup2', { setupData: form });
   };
 
   const isFormValid = form.fullName && form.businessName && form.designation && form.category && form.city && form.chapter;
