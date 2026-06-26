@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
@@ -95,6 +95,27 @@ export default function MemberProfileScreen({ route, navigation }) {
     } 
   };
 
+  // Open a social link safely; silently does nothing if URL is unavailable
+  const openSocialLink = async (url) => {
+    if (!url) return;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) Linking.openURL(url);
+    } catch (_) {}
+  };
+
+  const whatsappUrl  = member.whatsApp  ? `https://wa.me/${member.whatsApp.replace(/\D/g, '')}` : null;
+  const linkedinUrl  = member.linkedin   ? (member.linkedin.startsWith('http') ? member.linkedin : `https://${member.linkedin}`) : null;
+  const instagramUrl = member.instagram  ? (member.instagram.startsWith('http') ? member.instagram : `https://${member.instagram}`) : null;
+  const websiteUrl   = member.website    ? (member.website.startsWith('http') ? member.website : `https://${member.website}`) : null;
+
+  const socialLinks = [
+    { icon: 'logo-whatsapp',  url: whatsappUrl  },
+    { icon: 'logo-linkedin',  url: linkedinUrl  },
+    { icon: 'logo-instagram', url: instagramUrl },
+    { icon: 'globe-outline',  url: websiteUrl   },
+  ];
+
   return (
     <View style={s.container}>
       <StatusBarBackground />
@@ -127,9 +148,15 @@ export default function MemberProfileScreen({ route, navigation }) {
             <Text style={s.memberId}>ID: BN-{String(member.id).padStart(5, '0')}</Text>
             
             <View style={s.socialRow}>
-              {['logo-whatsapp', 'logo-linkedin', 'logo-instagram', 'globe-outline'].map((icon, i) => (
-                <TouchableOpacity key={i} style={s.socialIcon}>
-                  <Ionicons name={icon} size={20} color={colors.accent} />
+              {socialLinks.map(({ icon, url }, i) => (
+                <TouchableOpacity 
+                  key={i}
+                  style={[s.socialIcon, !url && s.socialIconDisabled]}
+                  onPress={() => openSocialLink(url)}
+                  activeOpacity={url ? 0.7 : 1}
+                  disabled={!url}
+                >
+                  <Ionicons name={icon} size={20} color={url ? colors.accent : 'rgba(138,155,176,0.45)'} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -286,6 +313,7 @@ const s = StyleSheet.create({
   memberId:       { color: '#8A9BB0', fontSize: 12, marginBottom: 20 },
   socialRow:      { flexDirection: 'row', gap: 20 },
   socialIcon:     { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+  socialIconDisabled: { backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
   
   // Actions
   actionRow:      { flexDirection: 'row', paddingHorizontal: 16, marginTop: -25, marginBottom: 20, gap: 10 },

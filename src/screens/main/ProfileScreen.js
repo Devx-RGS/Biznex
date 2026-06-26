@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -96,6 +96,8 @@ export default function ProfileScreen({ navigation }) {
     renewalDueDate: 'Jan 15, 2027',
     savedByMembers: ['1', '2', '3', '4'],
     savedMembers: ['2', '5'],
+    profilePhoto: null,
+    companyLogo: null,
   };
 
   // 1. Data Model state
@@ -143,8 +145,36 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const cancelEditing = () => {
+    setDraft({ ...profile }); // always reset draft to committed profile
     setIsEditing(false);
   };
+
+  // Returns true only if the user has actually changed something while editing
+  const isDirty = isEditing && JSON.stringify(draft) !== JSON.stringify(profile);
+
+  // Show the 3-option unsaved-changes dialog
+  const showUnsavedDialog = useCallback((onDiscard) => {
+    Alert.alert(
+      'Discard your changes?',
+      'You have unsaved edits to your profile.',
+      [
+        { text: 'Continue Editing', style: 'cancel' },
+        { text: 'Discard Changes', style: 'destructive', onPress: () => { cancelEditing(); if (onDiscard) onDiscard(); } },
+        { text: 'Save Changes', onPress: saveProfile },
+      ]
+    );
+  }, [draft, profile]);
+
+  // Intercept hardware/gesture back while editing with unsaved changes
+  useEffect(() => {
+    if (!isEditing) return;
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!isDirty) return; // nothing changed — let navigation proceed
+      e.preventDefault();
+      showUnsavedDialog(() => navigation.dispatch(e.data.action));
+    });
+    return unsubscribe;
+  }, [navigation, isEditing, isDirty, showUnsavedDialog]);
 
   const saveProfile = async () => {
     if (!draft.fullName.trim()) {
@@ -351,10 +381,11 @@ export default function ProfileScreen({ navigation }) {
             style={s.headerBtn} 
             onPress={() => {
               if (isEditing) {
-                Alert.alert('Unsaved Changes', 'Discard modifications?', [
-                  { text: 'Yes, Discard', onPress: cancelEditing, style: 'destructive' },
-                  { text: 'Keep Editing', style: 'cancel' }
-                ]);
+                if (isDirty) {
+                  showUnsavedDialog();
+                } else {
+                  cancelEditing();
+                }
               } else {
                 startEditing();
               }
@@ -374,33 +405,71 @@ export default function ProfileScreen({ navigation }) {
         >
           {/* Hero Header Section */}
           <View style={s.hero}>
-            <TouchableOpacity 
-              activeOpacity={0.8}
-              disabled={!isEditing}
-              onPress={async () => {
-                let result = await ImagePicker.launchImageLibraryAsync({
-                  mediaTypes: ['images'],
-                  allowsEditing: true,
-                  aspect: [1, 1],
-                  quality: 0.8,
-                });
-                if (!result.canceled) {
-                  handleFieldChange('profilePhoto', result.assets[0].uri);
-                }
-              }}
-              style={[s.avatarLarge, { backgroundColor: displayData.avatarColor }]}
-            >
-              {displayData.profilePhoto ? (
-                <Image source={{ uri: displayData.profilePhoto }} style={s.imageFullCircular} />
-              ) : (
-                <Text style={s.avatarLargeTxt}>{displayData.initials}</Text>
-              )}
-              {isEditing && (
-                <View style={s.avatarOverlay}>
-                  <Ionicons name="camera" size={20} color="#fff" />
-                </View>
-              )}
-            </TouchableOpacity>
+            <View style={s.avatarContainer}>
+              {/* Profile Photo */}
+              <View style={s.photoWrapper}>
+                <Text style={s.photoLabel}>Profile Photo</Text>
+                <TouchableOpacity 
+                  activeOpacity={0.8}
+                  disabled={!isEditing}
+                  onPress={async () => {
+                    let result = await ImagePicker.launchImageLibraryAsync({
+                      mediaTypes: ['images'],
+                      allowsEditing: true,
+                      aspect: [1, 1],
+                      quality: 0.8,
+                    });
+                    if (!result.canceled) {
+                      handleFieldChange('profilePhoto', result.assets[0].uri);
+                    }
+                  }}
+                  style={[s.avatarLarge, { backgroundColor: displayData.avatarColor }]}
+                >
+                  {displayData.profilePhoto ? (
+                    <Image source={{ uri: displayData.profilePhoto }} style={s.imageFullCircular} />
+                  ) : (
+                    <Text style={s.avatarLargeTxt}>{displayData.initials}</Text>
+                  )}
+                  {isEditing && (
+                    <View style={s.avatarOverlay}>
+                      <Ionicons name="camera" size={20} color="#fff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Company Logo */}
+              <View style={s.photoWrapper}>
+                <Text style={s.photoLabel}>Company Logo</Text>
+                <TouchableOpacity 
+                  activeOpacity={0.8}
+                  disabled={!isEditing}
+                  onPress={async () => {
+                    let result = await ImagePicker.launchImageLibraryAsync({
+                      mediaTypes: ['images'],
+                      allowsEditing: true,
+                      aspect: [1, 1],
+                      quality: 0.8,
+                    });
+                    if (!result.canceled) {
+                      handleFieldChange('companyLogo', result.assets[0].uri);
+                    }
+                  }}
+                  style={[s.logoLarge, { backgroundColor: '#F0F0F0' }]}
+                >
+                  {displayData.companyLogo ? (
+                    <Image source={{ uri: displayData.companyLogo }} style={s.imageFullSquare} />
+                  ) : (
+                    <Ionicons name="business" size={28} color={colors.accent} />
+                  )}
+                  {isEditing && (
+                    <View style={s.logoOverlay}>
+                      <Ionicons name="camera" size={20} color="#fff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
             
             {!isEditing ? (
               <>
@@ -842,10 +911,16 @@ const s = StyleSheet.create({
   
   // Hero
   hero:           { backgroundColor: colors.primary, alignItems: 'center', paddingBottom: 25, borderBottomLeftRadius: 25, borderBottomRightRadius: 25 },
-  avatarLarge:    { width: 90, height: 90, borderRadius: 45, justifyContent: 'center', alignItems: 'center', marginBottom: 12, borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)', position: 'relative', overflow: 'hidden' },
+  avatarContainer:{ flexDirection: 'row', justifyContent: 'center', gap: 24, marginBottom: 12, marginTop: 10 },
+  photoWrapper:   { alignItems: 'center' },
+  photoLabel:     { fontSize: 10, fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.5)', marginBottom: 6, textTransform: 'uppercase' },
+  avatarLarge:    { width: 90, height: 90, borderRadius: 45, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)', position: 'relative', overflow: 'hidden' },
   avatarLargeTxt: { color: '#fff', fontSize: 32, fontFamily: 'Inter_700Bold' },
   imageFullCircular: { width: '100%', height: '100%', borderRadius: 45 },
   avatarOverlay:  { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  logoLarge:      { width: 90, height: 90, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)', position: 'relative', overflow: 'hidden' },
+  logoOverlay:    { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  imageFullSquare:{ width: '100%', height: '100%' },
   heroName:       { color: '#fff', fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
   heroDesig:      { color: colors.accent, fontSize: 14, fontFamily: 'Inter_600SemiBold', marginBottom: 12, textAlign: 'center', paddingHorizontal: 20 },
   heroChips:      { flexDirection: 'row', gap: 10, marginBottom: 15 },

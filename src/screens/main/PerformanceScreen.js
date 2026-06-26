@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
+import { calculateProfileCompletion } from '../../utils/profileHelper';
 
 const { width } = Dimensions.get('window');
 
@@ -85,42 +86,6 @@ export default function PerformanceScreen({ navigation }) {
   ]);
 
   const [savedByMembers] = useState(['1', '2', '3', '4']);
-
-  const calculateProfileCompletion = (p) => {
-    if (!p) return 0;
-    const fields = [
-      'fullName',
-      'businessName',
-      'designation',
-      'category',
-      'city',
-      'chapter',
-      'whatsApp',
-      'email',
-      'profilePhoto',
-      'companyLogo',
-      'website',
-      'offer',
-      'lookingFor',
-      'keywords',
-      'aboutBusiness'
-    ];
-    
-    let completed = 0;
-    fields.forEach(field => {
-      if (field === 'keywords') {
-        if (Array.isArray(p.keywords) && p.keywords.length > 0) {
-          completed++;
-        }
-      } else if (p[field] && typeof p[field] === 'string' && p[field].trim() !== '') {
-        completed++;
-      } else if (p[field] && typeof p[field] !== 'string') {
-        completed++;
-      }
-    });
-
-    return Math.round((completed / fields.length) * 100);
-  };
 
   const loadProfile = async () => {
     try {
@@ -229,15 +194,6 @@ export default function PerformanceScreen({ navigation }) {
               </View>
             </View>
 
-            <View style={s.completionRow}>
-              <View style={s.completionLabels}>
-                <Text style={s.completionTitle}>Profile Strength</Text>
-                <Text style={s.completionPct}>{performanceData.profileCompletion}%</Text>
-              </View>
-              <View style={s.progressBarBg}>
-                <View style={[s.progressBarActive, { width: `${performanceData.profileCompletion}%` }]} />
-              </View>
-            </View>
           </View>
 
           {/* PERFORMANCE METRICS GRID SECTION */}
@@ -250,8 +206,8 @@ export default function PerformanceScreen({ navigation }) {
             <MetricCard 
               icon="eye-outline" 
               label="Profile Views" 
-              value={performanceData.profileViews}
-              trend="📈 +28% visibility this week"
+              value={performanceData.profileViews === 0 ? '—' : performanceData.profileViews}
+              trend={performanceData.profileViews === 0 ? '👁 No views yet — keep networking!' : '📈 +28% visibility this week'}
             />
             <MetricCard 
               icon="search-outline" 
@@ -268,8 +224,8 @@ export default function PerformanceScreen({ navigation }) {
             <MetricCard 
               icon="bookmark-outline" 
               label="Vendor Saves" 
-              value={performanceData.vendorSaves}
-              trend="⭐ Saved as preferred vendor"
+              value={performanceData.vendorSaves === 0 ? '—' : performanceData.vendorSaves}
+              trend={performanceData.vendorSaves === 0 ? '🔖 No members have saved your profile yet.' : '⭐ Saved as preferred vendor'}
             />
           </View>
 
@@ -280,36 +236,44 @@ export default function PerformanceScreen({ navigation }) {
           </View>
 
           <View style={s.reputationCard}>
-            <View style={s.repTopRow}>
-              <View style={s.ratingCol}>
-                <Text style={s.bigRating}>{performanceData.averageRating}</Text>
-                <View style={s.starsRow}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Ionicons 
-                      key={star} 
-                      name={star <= Math.round(performanceData.averageRating) ? "star" : "star-outline"} 
-                      size={14} 
-                      color={colors.accent} 
-                      style={{ marginRight: 2 }}
-                    />
-                  ))}
-                </View>
-                <Text style={s.reviewsCount}>Based on {performanceData.totalReviews} reviews</Text>
+            {performanceData.totalReviews === 0 ? (
+              <View style={s.emptyState}>
+                <Ionicons name="star-outline" size={28} color={colors.secondaryText} style={{ marginBottom: 8 }} />
+                <Text style={s.emptyStateText}>No ratings yet.</Text>
+                <Text style={s.emptyStateSubText}>Keep networking to receive your first review.</Text>
               </View>
-
-              <View style={s.repDividerLine} />
-
-              <View style={s.testimonialStatsCol}>
-                <View style={s.statMiniRow}>
-                  <Text style={s.statMiniLabel}>Given</Text>
-                  <Text style={s.statMiniValue}>{performanceData.testimonialsGiven}</Text>
+            ) : (
+              <View style={s.repTopRow}>
+                <View style={s.ratingCol}>
+                  <Text style={s.bigRating}>{performanceData.averageRating}</Text>
+                  <View style={s.starsRow}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Ionicons 
+                        key={star} 
+                        name={star <= Math.round(performanceData.averageRating) ? "star" : "star-outline"} 
+                        size={14} 
+                        color={colors.accent} 
+                        style={{ marginRight: 2 }}
+                      />
+                    ))}
+                  </View>
+                  <Text style={s.reviewsCount}>Based on {performanceData.totalReviews} reviews</Text>
                 </View>
-                <View style={s.statMiniRow}>
-                  <Text style={s.statMiniLabel}>Received</Text>
-                  <Text style={s.statMiniValue}>{performanceData.testimonialsReceived}</Text>
+
+                <View style={s.repDividerLine} />
+
+                <View style={s.testimonialStatsCol}>
+                  <View style={s.statMiniRow}>
+                    <Text style={s.statMiniLabel}>Given</Text>
+                    <Text style={s.statMiniValue}>{performanceData.testimonialsGiven}</Text>
+                  </View>
+                  <View style={s.statMiniRow}>
+                    <Text style={s.statMiniLabel}>Received</Text>
+                    <Text style={s.statMiniValue}>{performanceData.testimonialsReceived}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            )}
 
             <TouchableOpacity 
               style={s.btnViewTestimonials}
@@ -384,31 +348,39 @@ export default function PerformanceScreen({ navigation }) {
               </View>
 
               <ScrollView contentContainerStyle={s.modalScroll}>
-                {performanceData.testimonials.map((t) => (
-                  <View key={t.id} style={s.testimonialItemCard}>
-                    <View style={s.testiTop}>
-                      <View style={s.testiAvatar}>
-                        <Text style={s.testiAvatarTxt}>{t.initials}</Text>
-                      </View>
-                      <View style={s.testiInfo}>
-                        <Text style={s.testiName}>{t.name}</Text>
-                        <Text style={s.testiDate}>{t.date}</Text>
-                      </View>
-                      <View style={s.testiStars}>
-                        {[1,2,3,4,5].map(v => (
-                          <Ionicons 
-                            key={v} 
-                            name={v <= t.rating ? "star" : "star-outline"} 
-                            size={12} 
-                            color={colors.accent} 
-                            style={{ marginLeft: 1 }}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                    <Text style={s.testiText}>"{t.text}"</Text>
+                {performanceData.testimonials.length === 0 ? (
+                  <View style={s.emptyState}>
+                    <Ionicons name="chatbubble-outline" size={32} color={colors.secondaryText} style={{ marginBottom: 10 }} />
+                    <Text style={s.emptyStateText}>No testimonials yet.</Text>
+                    <Text style={s.emptyStateSubText}>Keep networking to receive your first testimonial.</Text>
                   </View>
-                ))}
+                ) : (
+                  performanceData.testimonials.map((t) => (
+                    <View key={t.id} style={s.testimonialItemCard}>
+                      <View style={s.testiTop}>
+                        <View style={s.testiAvatar}>
+                          <Text style={s.testiAvatarTxt}>{t.initials}</Text>
+                        </View>
+                        <View style={s.testiInfo}>
+                          <Text style={s.testiName}>{t.name}</Text>
+                          <Text style={s.testiDate}>{t.date}</Text>
+                        </View>
+                        <View style={s.testiStars}>
+                          {[1,2,3,4,5].map(v => (
+                            <Ionicons 
+                              key={v} 
+                              name={v <= t.rating ? "star" : "star-outline"} 
+                              size={12} 
+                              color={colors.accent} 
+                              style={{ marginLeft: 1 }}
+                            />
+                          ))}
+                        </View>
+                      </View>
+                      <Text style={s.testiText}>"{t.text}"</Text>
+                    </View>
+                  ))
+                )}
               </ScrollView>
 
               <TouchableOpacity style={s.modalCloseBtn} onPress={() => setTestimonialsModalVisible(false)}>
@@ -561,5 +533,10 @@ const s = StyleSheet.create({
   testiName: { fontSize: 12.5, fontFamily: 'Inter_700Bold', color: colors.primary },
   testiDate: { fontSize: 9.5, color: '#888', marginTop: 1 },
   testiStars: { flexDirection: 'row' },
-  testiText: { fontSize: 12, color: '#555', fontFamily: 'Inter_400Regular', fontStyle: 'italic', lineHeight: 17 }
+  testiText: { fontSize: 12, color: '#555', fontFamily: 'Inter_400Regular', fontStyle: 'italic', lineHeight: 17 },
+
+  // Empty States
+  emptyState:        { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 16 },
+  emptyStateText:    { fontSize: 13.5, fontFamily: 'Inter_600SemiBold', color: colors.secondaryText, textAlign: 'center', marginBottom: 4 },
+  emptyStateSubText: { fontSize: 11.5, fontFamily: 'Inter_400Regular', color: '#aaa', textAlign: 'center', lineHeight: 16 },
 });
