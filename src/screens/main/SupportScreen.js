@@ -14,25 +14,36 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
+import PrimaryButton from '../../components/PrimaryButton';
 
 const { width } = Dimensions.get('window');
 
-// ── FAQ Item Component ─────────────────────────────────────────────
-const FAQItem = ({ question, answer, isOpen, onPress }) => (
-  <View style={s.faqItem}>
-    <TouchableOpacity style={s.faqQuestionRow} onPress={onPress} activeOpacity={0.7}>
-      <Text style={s.faqQuestion}>{question}</Text>
-      <Ionicons 
-        name={isOpen ? "chevron-up" : "chevron-down"} 
-        size={18} 
-        color={colors.primary} 
-      />
-    </TouchableOpacity>
-    {isOpen && (
-      <View style={s.faqAnswerContainer}>
-        <Text style={s.faqAnswer}>{answer}</Text>
-      </View>
-    )}
+// ── Reusable Styling Components ─────────────────────────────────────
+
+const SectionHeader = ({ title }) => (
+  <Text style={s.sectionTitle}>{title}</Text>
+);
+
+const InfoCard = ({ children, style }) => (
+  <View style={[s.card, style]}>{children}</View>
+);
+
+const ContactInfoItem = ({ icon, label, value }) => (
+  <View style={s.contactInfoItem}>
+    <View style={s.contactIconCircle}>
+      <Ionicons name={icon} size={18} color={colors.accent} />
+    </View>
+    <View style={{ flex: 1 }}>
+      <Text style={s.contactLabel}>{label}</Text>
+      <Text style={s.contactVal}>{value}</Text>
+    </View>
+  </View>
+);
+
+const BenefitItem = ({ text }) => (
+  <View style={s.benefitItem}>
+    <Ionicons name="checkmark-circle" size={18} color={colors.accent} style={{ marginRight: 8, marginTop: 1 }} />
+    <Text style={s.benefitTxt}>{text}</Text>
   </View>
 );
 
@@ -48,54 +59,63 @@ const StatusBarBackground = () => (
   }} />
 );
 
+const AD_PACKAGES = [
+  {
+    name: 'Starter Package',
+    duration: '7 Days',
+    price: '₹2,499',
+    benefits: [
+      'Home screen banner visibility',
+      'Increased profile exposure',
+      'Priority business discovery',
+      'Enhanced brand awareness'
+    ]
+  },
+  {
+    name: 'Growth Package',
+    duration: '15 Days',
+    price: '₹4,999',
+    benefits: [
+      'Home screen banner visibility',
+      'Increased profile exposure (2x)',
+      'Priority business discovery',
+      'Enhanced brand awareness'
+    ]
+  },
+  {
+    name: 'Premium Package',
+    duration: '30 Days',
+    price: '₹8,999',
+    benefits: [
+      'Home screen banner visibility (Featured)',
+      'Increased profile exposure (5x)',
+      'Priority business discovery (Top tier)',
+      'Enhanced brand awareness'
+    ]
+  }
+];
+
 export default function SupportScreen({ navigation }) {
-  // Collapsible FAQ states
-  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  // Modal state
+  const [modalType, setModalType] = useState(null); // 'issue', 'feedback', 'advertise', 'terms', 'privacy', or null
 
-  // Policy Modal state
-  const [modalType, setModalType] = useState(null); // 'terms', 'privacy', 'issue', 'feedback', or null
-
-  // Issue/Feedback input state
+  // Issue/Feedback inputs
   const [inputText, setInputText] = useState('');
   const [feedbackRating, setFeedbackRating] = useState(5);
 
-  const faqs = [
-    {
-      q: "How do I verify my business profile?",
-      a: "Navigate to your 'My Profile' tab, scroll down to the 'Business Verification' section, and upload a digital copy (PDF/Image) of your GST registration certificate or Business incorporation document. The verification process takes about 24-48 business hours."
-    },
-    {
-      q: "How do I pass business referrals to other members?",
-      a: "Search for a member in the 'Member Directory', click on their card to view their profile, and tap the 'Refer' action button. Fill in the referral name, contact details, and the referral type (hot, warm, or cold) to log the referral."
-    },
-    {
-      q: "Can I transfer my profile to a different chapter?",
-      a: "Yes, chapter transfers are handled by our membership committee. Please submit a request via 'Report Issue' or write to chapter-support@biznex.app detailing the reason for transfer and the destination chapter."
-    },
-    {
-      q: "What is the BizNex Verification Badge?",
-      a: "The verification badge (gold ribbon or shield checkmark) is awarded to member businesses that have successfully submitted valid registration credentials. It indicates to other members that the business is authentic and legally compliant."
-    },
-    {
-      q: "How are my networking stats calculated?",
-      a: "Your networking stats (Business Given, Received, Referrals, and Meetings) are aggregate tallies calculated dynamically from active entries logged in the system by you and your fellow chapter members."
-    }
-  ];
-
-  const toggleFaq = (index) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  const handleEmailUs = () => {
+    Alert.alert(
+      'Email Us',
+      'Opening your mail client to send a message to support@biznex.app...',
+      [{ text: 'OK' }]
+    );
   };
 
-  const handleContactSupport = () => {
+  const handleCallSupport = () => {
     Alert.alert(
-      'Contact Support',
-      'Choose your preferred contact method:',
-      [
-        { text: 'Chat on WhatsApp', onPress: () => Alert.alert('WhatsApp Redirect', 'Opening WhatsApp Support chat (+91 90000 12345)...') },
-        { text: 'Email Support', onPress: () => Alert.alert('Mail App Redirect', 'Opening email client to send message to support@biznex.app...') },
-        { text: 'Call Helpdesk', onPress: () => Alert.alert('Dialer Redirect', 'Dialing support helpline: 1800-200-BIZNEX...') },
-        { text: 'Cancel', style: 'cancel' }
-      ]
+      'Call Support',
+      'Dialing customer support: +1 (800) 200-BIZNEX...',
+      [{ text: 'OK' }]
     );
   };
 
@@ -106,13 +126,30 @@ export default function SupportScreen({ navigation }) {
     }
     setModalType(null);
     setInputText('');
-    Alert.alert('Issue Logged', 'Your support ticket has been created. A support executive will contact you shortly.');
+    Alert.alert(
+      'Issue Logged',
+      'Your support ticket has been created. A support executive will contact you shortly.',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleFeedbackSubmit = () => {
     setModalType(null);
     setInputText('');
-    Alert.alert('Thank You', `We appreciate your feedback! You rated us ${feedbackRating}/5 stars.`);
+    Alert.alert(
+      'Thank You',
+      `We appreciate your feedback! You rated us ${feedbackRating}/5 stars.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleBookPackage = (packageName) => {
+    setModalType(null);
+    Alert.alert(
+      'Booking Request Received',
+      `Thank you for booking the ${packageName}!\n\nOur advertising support team will contact you within 24 hours to confirm your business details and set up your Home screen banner.`,
+      [{ text: 'OK' }]
+    );
   };
 
   return (
@@ -130,77 +167,108 @@ export default function SupportScreen({ navigation }) {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
           
-          {/* Support Greeting Card */}
+          {/* Section 1: HELP & SUPPORT HEADER MESSAGE */}
           <View style={s.greetingCard}>
             <Ionicons name="help-buoy-outline" size={48} color={colors.accent} style={{ marginBottom: 10 }} />
             <Text style={s.greetingTitle}>How can we help you today?</Text>
-            <Text style={s.greetingText}>Our support team is available 24/7 to resolve technical issues and chapter management questions.</Text>
+            <Text style={s.greetingText}>Our support team is available to assist you with account verification, chapter listings, and networking queries.</Text>
           </View>
 
-          {/* Quick Actions Row */}
-          <View style={s.actionGrid}>
-            <TouchableOpacity style={s.actionCard} onPress={handleContactSupport}>
-              <View style={[s.actionIconBg, { backgroundColor: 'rgba(201,168,76,0.12)' }]}>
-                <Ionicons name="chatbubbles-outline" size={20} color={colors.accent} />
-              </View>
-              <Text style={s.actionTitle}>Contact Us</Text>
-              <Text style={s.actionDesc}>Chat with us now</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={s.actionCard} onPress={() => { setInputText(''); setModalType('issue'); }}>
-              <View style={[s.actionIconBg, { backgroundColor: 'rgba(229,57,53,0.1)' }]}>
-                <Ionicons name="bug-outline" size={20} color={colors.error} />
-              </View>
-              <Text style={s.actionTitle}>Report Issue</Text>
-              <Text style={s.actionDesc}>Submit bug or bug details</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={s.actionCard} onPress={() => { setInputText(''); setFeedbackRating(5); setModalType('feedback'); }}>
-              <View style={[s.actionIconBg, { backgroundColor: 'rgba(33,150,243,0.1)' }]}>
-                <Ionicons name="thumbs-up-outline" size={20} color="#2196F3" />
-              </View>
-              <Text style={s.actionTitle}>Feedback</Text>
-              <Text style={s.actionDesc}>Rate your experience</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* FAQs Accordion */}
-          <View style={s.sectionContainer}>
-            <Text style={s.sectionHeaderTitle}>Frequently Asked Questions</Text>
-            <View style={s.faqList}>
-              {faqs.map((faq, i) => (
-                <FAQItem
-                  key={i}
-                  question={faq.q}
-                  answer={faq.a}
-                  isOpen={openFaqIndex === i}
-                  onPress={() => toggleFaq(i)}
-                />
-              ))}
+          {/* Section 2: CONTACT SUPPORT CARD */}
+          <InfoCard>
+            <SectionHeader title="Contact Support" />
+            <View style={s.contactInfoList}>
+              <ContactInfoItem 
+                icon="mail-outline" 
+                label="Support Email" 
+                value="support@biznex.app" 
+              />
+              <ContactInfoItem 
+                icon="call-outline" 
+                label="Support Phone Number" 
+                value="+1 (800) 200-BIZNEX" 
+              />
+              <ContactInfoItem 
+                icon="time-outline" 
+                label="Office Hours" 
+                value="Mon - Sat, 9:00 AM - 6:00 PM" 
+              />
             </View>
-          </View>
-
-          {/* Legal / Policy Links */}
-          <View style={s.sectionContainer}>
-            <Text style={s.sectionHeaderTitle}>Legal & Policies</Text>
-            <View style={s.policyList}>
-              <TouchableOpacity style={s.policyRow} onPress={() => setModalType('terms')}>
-                <View style={s.policyRowLeft}>
-                  <Ionicons name="document-text-outline" size={20} color={colors.primary} />
-                  <Text style={s.policyText}>Terms & Conditions</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#8A9BB0" />
+            <View style={s.contactActionsRow}>
+              <TouchableOpacity style={s.contactBtnLeft} onPress={handleEmailUs}>
+                <Ionicons name="mail" size={15} color={colors.primary} style={{ marginRight: 6 }} />
+                <Text style={s.contactBtnTxtLeft}>Email Us</Text>
               </TouchableOpacity>
-
-              <View style={s.policyDivider} />
-
-              <TouchableOpacity style={s.policyRow} onPress={() => setModalType('privacy')}>
-                <View style={s.policyRowLeft}>
-                  <Ionicons name="shield-outline" size={20} color={colors.primary} />
-                  <Text style={s.policyText}>Privacy Policy</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#8A9BB0" />
+              <TouchableOpacity style={s.contactBtnRight} onPress={handleCallSupport}>
+                <Ionicons name="call" size={15} color={colors.primary} style={{ marginRight: 6 }} />
+                <Text style={s.contactBtnTxtRight}>Call Support</Text>
               </TouchableOpacity>
+            </View>
+          </InfoCard>
+
+          {/* Section 3: REPORT ISSUE SECTION */}
+          <InfoCard>
+            <SectionHeader title="Report an Issue" />
+            <Text style={s.descTxt}>
+              Encountered a bug, crash, or account issue? Provide details of the problem so our engineering team can resolve it.
+            </Text>
+            <TouchableOpacity style={s.btnAccent} onPress={() => { setInputText(''); setModalType('issue'); }}>
+              <Ionicons name="bug-outline" size={18} color={colors.primary} style={{ marginRight: 8 }} />
+              <Text style={s.btnAccentTxt}>Report an Issue</Text>
+            </TouchableOpacity>
+          </InfoCard>
+
+          {/* Section 4: FEEDBACK SECTION */}
+          <InfoCard>
+            <SectionHeader title="Feedback" />
+            <Text style={s.descTxt}>
+              We are constantly working to improve BizNex. Share your suggestions, ideas, or overall app experience with us.
+            </Text>
+            <TouchableOpacity style={s.btnOutline} onPress={() => { setInputText(''); setFeedbackRating(5); setModalType('feedback'); }}>
+              <Ionicons name="thumbs-up-outline" size={18} color={colors.primary} style={{ marginRight: 8 }} />
+              <Text style={s.btnOutlineTxt}>Send Feedback</Text>
+            </TouchableOpacity>
+          </InfoCard>
+
+          {/* Section 5: ADVERTISE WITH BIZNEX SECTION */}
+          <InfoCard style={s.advertiseCard}>
+            <View style={s.advertiseCardHeader}>
+              <View style={s.advertiseIconCircle}>
+                <Ionicons name="megaphone" size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.advertiseCardTitle}>Advertise with BizNex</Text>
+                <Text style={s.advertiseCardSubtitle}>Grow Your Brand Presence</Text>
+              </View>
+            </View>
+            <Text style={s.descTxt}>
+              Feature your business banner prominently on the HomeScreen. Reach more businesses, increase profile exposure, and generate direct networking opportunities.
+            </Text>
+            <TouchableOpacity style={s.btnGold} onPress={() => setModalType('advertise')}>
+              <Ionicons name="ribbon-outline" size={18} color={colors.accent} style={{ marginRight: 8 }} />
+              <Text style={s.btnGoldTxt}>View Banner Packages</Text>
+            </TouchableOpacity>
+          </InfoCard>
+
+
+
+          {/* Section 7: SUPPORT STATUS SECTION */}
+          <View style={s.statusContainer}>
+            <View style={s.statusRow}>
+              <View style={s.statusItem}>
+                <Text style={s.statusLabel}>App Version</Text>
+                <Text style={s.statusVal}>v1.4.2</Text>
+              </View>
+              <View style={s.statusDivider} />
+              <View style={s.statusItem}>
+                <Text style={s.statusLabel}>Last Updated</Text>
+                <Text style={s.statusVal}>June 2026</Text>
+              </View>
+              <View style={s.statusDivider} />
+              <View style={s.statusItem}>
+                <Text style={s.statusLabel}>Support SLA</Text>
+                <Text style={s.statusVal}>Within 24 Hrs</Text>
+              </View>
             </View>
           </View>
 
@@ -222,13 +290,14 @@ export default function SupportScreen({ navigation }) {
                   {modalType === 'privacy' && "Privacy Policy"}
                   {modalType === 'issue' && "Report an Issue"}
                   {modalType === 'feedback' && "Submit Feedback"}
+                  {modalType === 'advertise' && "Banner Promotion Packages"}
                 </Text>
                 <TouchableOpacity onPress={() => setModalType(null)}>
                   <Ionicons name="close" size={24} color={colors.primary} />
                 </TouchableOpacity>
               </View>
 
-              <ScrollView contentContainerStyle={s.modalScroll}>
+              <ScrollView contentContainerStyle={s.modalScroll} showsVerticalScrollIndicator={false}>
                 {/* 1. Terms & Conditions Content */}
                 {modalType === 'terms' && (
                   <View style={s.legalTextContainer}>
@@ -279,9 +348,7 @@ export default function SupportScreen({ navigation }) {
                       numberOfLines={5}
                       textAlignVertical="top"
                     />
-                    <TouchableOpacity style={s.formSubmitBtn} onPress={handleReportIssueSubmit}>
-                      <Text style={s.formSubmitBtnTxt}>Submit Ticket</Text>
-                    </TouchableOpacity>
+                    <PrimaryButton title="Submit Ticket" onPress={handleReportIssueSubmit} />
                   </View>
                 )}
 
@@ -312,9 +379,43 @@ export default function SupportScreen({ navigation }) {
                       numberOfLines={4}
                       textAlignVertical="top"
                     />
-                    <TouchableOpacity style={[s.formSubmitBtn, { backgroundColor: '#2196F3' }]} onPress={handleFeedbackSubmit}>
-                      <Text style={s.formSubmitBtnTxt}>Submit Feedback</Text>
-                    </TouchableOpacity>
+                    <PrimaryButton title="Submit Feedback" onPress={handleFeedbackSubmit} />
+                  </View>
+                )}
+
+                {/* 5. Advertising Banner Packages Content */}
+                {modalType === 'advertise' && (
+                  <View style={s.packagesContainer}>
+                    <Text style={s.packagesSubtitle}>Select a banner promotion tier. Our advertising coordinator will guide you through graphic sizes and launch scheduling.</Text>
+                    {AD_PACKAGES.map((pkg) => (
+                      <View key={pkg.name} style={s.packageCard}>
+                        <View style={s.packageHeaderRow}>
+                          <View>
+                            <Text style={s.packageName}>{pkg.name}</Text>
+                            <Text style={s.packageDuration}>Duration: {pkg.duration}</Text>
+                          </View>
+                          <View style={s.packagePriceBadge}>
+                            <Text style={s.packagePrice}>{pkg.price}</Text>
+                          </View>
+                        </View>
+                        
+                        <View style={s.packageDivider} />
+                        
+                        <Text style={s.packageBenefitsTitle}>Benefits Included:</Text>
+                        <View style={s.packageBenefitsList}>
+                          {pkg.benefits.map((benefit, bIndex) => (
+                            <View key={bIndex} style={s.packageBenefitRow}>
+                              <Ionicons name="checkmark" size={14} color={colors.accent} style={{ marginRight: 6 }} />
+                              <Text style={s.packageBenefitTxt}>{benefit}</Text>
+                            </View>
+                          ))}
+                        </View>
+                        
+                        <TouchableOpacity style={s.pkgBookBtn} onPress={() => handleBookPackage(pkg.name)}>
+                          <Text style={s.pkgBookBtnTxt}>Book Now</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
                   </View>
                 )}
               </ScrollView>
@@ -353,46 +454,61 @@ const s = StyleSheet.create({
   greetingTitle: { color: '#fff', fontSize: 18, fontFamily: 'Inter_700Bold', marginVertical: 6, textAlign: 'center' },
   greetingText: { color: colors.secondaryText, fontSize: 12.5, fontFamily: 'Inter_400Regular', textAlign: 'center', lineHeight: 18 },
 
-  // Action Grid
-  actionGrid: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginTop: 16 },
-  actionCard: { 
-    flex: 1, 
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
-    padding: 12, 
-    alignItems: 'center',
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.05, 
-    shadowRadius: 8, 
-    elevation: 3 
-  },
-  actionIconBg: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  actionTitle: { fontSize: 12.5, fontFamily: 'Inter_700Bold', color: colors.primary },
-  actionDesc: { fontSize: 9.5, color: '#888', fontFamily: 'Inter_400Regular', textAlign: 'center', marginTop: 2 },
+  // Cards & General Section Styling
+  card:           { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, borderRadius: 12, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
+  sectionTitle:   { fontSize: 16, fontFamily: 'Inter_700Bold', color: colors.primary, marginBottom: 15 },
+  descTxt:        { fontSize: 13.5, color: '#555', fontFamily: 'Inter_400Regular', lineHeight: 20, marginBottom: 14 },
 
-  // Sections
-  sectionContainer: { marginHorizontal: 16, marginTop: 24 },
-  sectionHeaderTitle: { fontSize: 15, fontFamily: 'Inter_700Bold', color: colors.primary, marginBottom: 12 },
-  
-  // FAQ List
-  faqList: { gap: 10 },
-  faqItem: { backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E7EB' },
-  faqQuestionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  faqQuestion: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.primary, flex: 1, marginRight: 10 },
-  faqAnswerContainer: { borderTopWidth: 1, borderTopColor: '#E5E7EB', padding: 14, backgroundColor: '#F8F9FB' },
-  faqAnswer: { fontSize: 12.5, color: '#555', fontFamily: 'Inter_400Regular', lineHeight: 18 },
+  // Buttons
+  btnAccent: { backgroundColor: colors.accent, borderRadius: 8, height: 44, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', width: '100%', shadowColor: colors.accent, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 3 },
+  btnAccentTxt: { color: colors.primary, fontFamily: 'Inter_700Bold', fontSize: 14 },
+  btnOutline: { backgroundColor: '#fff', borderRadius: 8, height: 44, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', width: '100%', borderWidth: 1.5, borderColor: colors.primary },
+  btnOutlineTxt: { color: colors.primary, fontFamily: 'Inter_700Bold', fontSize: 14 },
 
-  // Policies
-  policyList: { backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', paddingVertical: 4 },
-  policyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
+  // Contact Info
+  contactInfoList: { gap: 12, marginBottom: 14 },
+  contactInfoItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  contactIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(201,168,76,0.1)', justifyContent: 'center', alignItems: 'center' },
+  contactLabel: { fontSize: 9, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 },
+  contactVal: { fontSize: 13.5, color: colors.primary, fontFamily: 'Inter_600SemiBold' },
+  contactActionsRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  contactBtnLeft: { flex: 1, height: 40, backgroundColor: 'rgba(201,168,76,0.15)', borderRadius: 8, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' },
+  contactBtnTxtLeft: { color: colors.primary, fontFamily: 'Inter_700Bold', fontSize: 13 },
+  contactBtnRight: { flex: 1, height: 40, backgroundColor: 'rgba(10,25,49,0.06)', borderRadius: 8, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', borderWidth: 1, borderColor: '#E0E0E0' },
+  contactBtnTxtRight: { color: colors.primary, fontFamily: 'Inter_700Bold', fontSize: 13 },
+
+  // Advertise Card
+  advertiseCard: { borderWidth: 1.5, borderColor: colors.accent, backgroundColor: '#FFFDF9' },
+  advertiseCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  advertiseIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(201,168,76,0.15)', justifyContent: 'center', alignItems: 'center' },
+  advertiseCardTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: colors.primary },
+  advertiseCardSubtitle: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: colors.accent },
+  btnGold: { backgroundColor: colors.primary, borderRadius: 8, height: 44, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', width: '100%', borderWidth: 1.5, borderColor: colors.accent },
+  btnGoldTxt: { color: colors.accent, fontFamily: 'Inter_700Bold', fontSize: 14 },
+
+  // Benefits List
+  benefitsContainer: { gap: 10 },
+  benefitItem: { flexDirection: 'row', alignItems: 'flex-start' },
+  benefitTxt: { fontSize: 13, color: '#444', fontFamily: 'Inter_400Regular', lineHeight: 18, flex: 1 },
+
+  // Policies List
+  policyList: { backgroundColor: '#fff', borderRadius: 10, paddingVertical: 4 },
+  policyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
   policyRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  policyText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.primary },
-  policyDivider: { height: 1, backgroundColor: '#E5E7EB', marginHorizontal: 14 },
+  policyText: { fontSize: 13.5, fontFamily: 'Inter_600SemiBold', color: colors.primary },
+  policyDivider: { height: 1, backgroundColor: '#E5E7EB' },
 
-  // Modal Structure
+  // Status Info Footer
+  statusContainer: { marginHorizontal: 16, marginTop: 20, marginBottom: 10 },
+  statusRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 6, borderWidth: 1, borderColor: '#E5E7EB' },
+  statusItem: { alignItems: 'center', flex: 1 },
+  statusLabel: { fontSize: 9, color: '#8A9BB0', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
+  statusVal: { fontSize: 11, color: colors.primary, fontFamily: 'Inter_700Bold' },
+  statusDivider: { width: 1, height: 20, backgroundColor: '#E5E7EB' },
+
+  // Modals Structure
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-  modalBody: { width: width * 0.9, maxHeight: '80%', backgroundColor: '#fff', borderRadius: 16, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 15, elevation: 10 },
+  modalBody: { width: width * 0.9, maxHeight: '85%', backgroundColor: '#fff', borderRadius: 16, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 15, elevation: 10 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', paddingBottom: 10, marginBottom: 12 },
   modalTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: colors.primary },
   modalScroll: { paddingVertical: 8 },
@@ -408,9 +524,23 @@ const s = StyleSheet.create({
   formContainer: { paddingHorizontal: 4 },
   fieldLabel: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: colors.primary, marginBottom: 6 },
   formTextarea: { backgroundColor: '#F3F4F6', borderRadius: 8, padding: 12, fontSize: 13, fontFamily: 'Inter_400Regular', color: colors.primary, borderWidth: 1, borderColor: '#E5E7EB', minHeight: 100, marginBottom: 16 },
-  formSubmitBtn: { height: 44, backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', borderRadius: 8 },
-  formSubmitBtnTxt: { color: '#fff', fontFamily: 'Inter_700Bold', fontSize: 14 },
 
   // Rating Stars
-  starsContainer: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginVertical: 14 }
+  starsContainer: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginVertical: 14 },
+
+  // Advertising Packages
+  packagesSubtitle: { fontSize: 12.5, color: '#666', fontFamily: 'Inter_400Regular', lineHeight: 18, marginBottom: 16 },
+  packageCard: { backgroundColor: '#F8F9FA', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, marginBottom: 16 },
+  packageHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  packageName: { fontSize: 15, fontFamily: 'Inter_700Bold', color: colors.primary },
+  packageDuration: { fontSize: 11.5, color: '#666', fontFamily: 'Inter_600SemiBold', marginTop: 2 },
+  packagePriceBadge: { backgroundColor: 'rgba(201,168,76,0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201,168,76,0.3)' },
+  packagePrice: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.accent },
+  packageDivider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 10 },
+  packageBenefitsTitle: { fontSize: 12, fontFamily: 'Inter_700Bold', color: colors.primary, marginBottom: 6 },
+  packageBenefitsList: { gap: 6, marginBottom: 12 },
+  packageBenefitRow: { flexDirection: 'row', alignItems: 'center' },
+  packageBenefitTxt: { fontSize: 11.5, color: '#555', fontFamily: 'Inter_400Regular' },
+  pkgBookBtn: { height: 36, backgroundColor: colors.accent, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
+  pkgBookBtnTxt: { color: colors.primary, fontFamily: 'Inter_700Bold', fontSize: 13 }
 });

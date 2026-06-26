@@ -183,8 +183,6 @@ export default function MemberProfileScreen({ route, navigation }) {
           <InfoCard>
             <SectionHeader title="Activity Stats" />
             <View style={s.statsGrid}>
-              <StatBox value="₹1,20,000" label="Business Given" />
-              <StatBox value="₹85,000" label="Business Received" />
               <StatBox value="24" label="Connects Given" />
               <StatBox value="18" label="Referrals Passed" />
             </View>

@@ -414,6 +414,7 @@ export default function ProfileScreen({ navigation }) {
                     <Text style={s.chipTxt}>{profile.category}</Text>
                   </View>
                 </View>
+                <Text style={{ color: '#8A9BB0', fontSize: 12, marginBottom: 15 }}>Referral ID: BNX-REF-7842</Text>
                 <TouchableOpacity style={s.editProfileBtn} onPress={startEditing}>
                   <Ionicons name="pencil" size={16} color="#fff" style={{ marginRight: 6 }} />
                   <Text style={s.editProfileBtnTxt}>Edit Profile</Text>
@@ -437,7 +438,7 @@ export default function ProfileScreen({ navigation }) {
             )}
           </View>
 
-          {/* Quick Stats Nav Card (ONLY "Business Performance" - NO Help & Support) */}
+          {/* Quick Nav Cards */}
           {!isEditing && (
             <TouchableOpacity 
               style={s.quickNavCard}
@@ -451,6 +452,26 @@ export default function ProfileScreen({ navigation }) {
                 <View>
                   <Text style={s.quickNavTitle}>My Performance Overview</Text>
                   <Text style={s.quickNavSubtitle}>View referrals, business volume, and stats</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#8A9BB0" />
+            </TouchableOpacity>
+          )}
+
+          {/* Help & Support Nav Card */}
+          {!isEditing && (
+            <TouchableOpacity 
+              style={[s.quickNavCard, { marginTop: 8 }]}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('Support')}
+            >
+              <View style={s.quickNavLeft}>
+                <View style={s.quickNavIconCircle}>
+                  <Ionicons name="help-buoy-outline" size={20} color={colors.accent} />
+                </View>
+                <View>
+                  <Text style={s.quickNavTitle}>Help & Support</Text>
+                  <Text style={s.quickNavSubtitle}>Contact us, report issues, or give feedback</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#8A9BB0" />
