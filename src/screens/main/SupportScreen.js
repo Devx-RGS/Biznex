@@ -9,7 +9,8 @@ import {
   Platform, 
   Alert,
   Modal,
-  TextInput
+  TextInput,
+  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,6 +60,12 @@ const StatusBarBackground = () => (
   }} />
 );
 
+const SUPPORT_CONTACT = {
+  email: 'support@biznex.app',
+  phone: '+1 (800) 200-BIZNEX',
+  phoneDial: 'tel:+18002002496',
+};
+
 const AD_PACKAGES = [
   {
     name: 'Starter Package',
@@ -103,20 +110,32 @@ export default function SupportScreen({ navigation }) {
   const [inputText, setInputText] = useState('');
   const [feedbackRating, setFeedbackRating] = useState(5);
 
-  const handleEmailUs = () => {
-    Alert.alert(
-      'Email Us',
-      'Opening your mail client to send a message to support@biznex.app...',
-      [{ text: 'OK' }]
-    );
+  const handleEmailUs = async () => {
+    const url = `mailto:${SUPPORT_CONTACT.email}`;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', `Your device does not support opening mail links. Please email us at ${SUPPORT_CONTACT.email}`);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to open email application.');
+    }
   };
 
-  const handleCallSupport = () => {
-    Alert.alert(
-      'Call Support',
-      'Dialing customer support: +1 (800) 200-BIZNEX...',
-      [{ text: 'OK' }]
-    );
+  const handleCallSupport = async () => {
+    const url = SUPPORT_CONTACT.phoneDial;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', `Your device does not support making phone calls. Please call us at ${SUPPORT_CONTACT.phone}`);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to open phone application.');
+    }
   };
 
   const handleReportIssueSubmit = () => {
@@ -181,12 +200,12 @@ export default function SupportScreen({ navigation }) {
               <ContactInfoItem 
                 icon="mail-outline" 
                 label="Support Email" 
-                value="support@biznex.app" 
+                value={SUPPORT_CONTACT.email} 
               />
               <ContactInfoItem 
                 icon="call-outline" 
                 label="Support Phone Number" 
-                value="+1 (800) 200-BIZNEX" 
+                value={SUPPORT_CONTACT.phone} 
               />
               <ContactInfoItem 
                 icon="time-outline" 

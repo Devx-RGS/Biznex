@@ -42,21 +42,7 @@ const AchievementBadge = ({ icon, title, desc }) => (
   </View>
 );
 
-// ── Activity Item Component ──────────────────────────────────────────
-const ActivityItem = ({ title, desc, time, icon }) => (
-  <View style={s.activityRow}>
-    <View style={s.activityIconCircle}>
-      <Ionicons name={icon} size={16} color={colors.primary} />
-    </View>
-    <View style={s.activityTextCol}>
-      <View style={s.activityTitleRow}>
-        <Text style={s.activityTitle}>{title}</Text>
-        <Text style={s.activityTime}>{time}</Text>
-      </View>
-      <Text style={s.activityDesc}>{desc}</Text>
-    </View>
-  </View>
-);
+
 
 const StatusBarBackground = () => (
   <View style={{ 
@@ -112,8 +98,6 @@ export default function PerformanceScreen({ navigation }) {
     avatarColor: colors.accent,
     chapter: 'Kandivali',
     membershipStatus: 'Active Member',
-    profileViews: 248,
-    directoryAppearances: 512,
   };
 
   const calculatedCompletion = calculateProfileCompletion(profile || displayProfile);
@@ -127,8 +111,6 @@ export default function PerformanceScreen({ navigation }) {
     membershipStatus: displayProfile.membershipStatus || 'Active Member',
     
     // Grid metrics
-    profileViews: displayProfile.profileViews || 248,
-    directoryAppearances: displayProfile.directoryAppearances || 512,
     profileCompletion: calculatedCompletion,
     vendorSaves: displayProfile.savedByMembers ? displayProfile.savedByMembers.length : savedByMembers.length,
     
@@ -146,13 +128,6 @@ export default function PerformanceScreen({ navigation }) {
       { id: '1', title: 'Rising Networker', icon: 'trending-up', desc: 'Visibility grew by 40%' },
       { id: '2', title: 'Highly Rated', icon: 'star', desc: `Consistent ${averageRating}★ reviews` },
       { id: '3', title: 'Trusted Vendor', icon: 'shield-checkmark', desc: 'Documents verified by board' },
-    ],
-    
-    // Recent logs
-    recentActivities: [
-      { id: '1', title: 'New Testimonial Received', desc: `Received a 5-star review from ${testimonials[0]?.name || 'a Member'}`, time: '5h ago', icon: 'chatbubble-ellipses-outline' },
-      { id: '2', title: 'Profile View Milestone', desc: 'Passed 200 total business profile views!', time: '2 days ago', icon: 'eye-outline' },
-      { id: '3', title: 'Saved by a Member', desc: 'A new member bookmarked your service profile', time: '3 days ago', icon: 'bookmark-outline' },
     ]
   };
 
@@ -203,18 +178,6 @@ export default function PerformanceScreen({ navigation }) {
           </View>
 
           <View style={s.metricsGrid}>
-            <MetricCard 
-              icon="eye-outline" 
-              label="Profile Views" 
-              value={performanceData.profileViews === 0 ? '—' : performanceData.profileViews}
-              trend={performanceData.profileViews === 0 ? '👁 No views yet — keep networking!' : '📈 +28% visibility this week'}
-            />
-            <MetricCard 
-              icon="search-outline" 
-              label="Directory Appearances" 
-              value={performanceData.directoryAppearances}
-              trend="🔍 Top search impressions"
-            />
             <MetricCard 
               icon="checkmark-circle-outline" 
               label="Profile Completion" 
@@ -306,27 +269,7 @@ export default function PerformanceScreen({ navigation }) {
             ))}
           </ScrollView>
 
-          {/* RECENT ACTIVITY LOG TIMELINE */}
-          <View style={s.sectionHeaderContainer}>
-            <Text style={s.sectionHeader}>Recent Activity</Text>
-            <Text style={s.sectionSub}>Live log of milestones and views</Text>
-          </View>
 
-          <View style={s.activityCard}>
-            {performanceData.recentActivities.map((act, i) => (
-              <View key={act.id}>
-                <ActivityItem 
-                  title={act.title}
-                  desc={act.desc}
-                  time={act.time}
-                  icon={act.icon}
-                />
-                {i < performanceData.recentActivities.length - 1 && (
-                  <View style={s.activityLineDivider} />
-                )}
-              </View>
-            ))}
-          </View>
 
           <View style={{ height: 40 }} />
         </ScrollView>
@@ -494,26 +437,7 @@ const s = StyleSheet.create({
   badgeTitle: { fontSize: 11, fontFamily: 'Inter_700Bold', color: colors.primary, textAlign: 'center', marginBottom: 2 },
   badgeDesc: { fontSize: 8.5, color: '#888', fontFamily: 'Inter_400Regular', textAlign: 'center' },
 
-  // Activities section
-  activityCard: { 
-    backgroundColor: '#fff', 
-    marginHorizontal: 16, 
-    borderRadius: 12, 
-    padding: 14,
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.05, 
-    shadowRadius: 8, 
-    elevation: 3 
-  },
-  activityRow: { flexDirection: 'row', paddingVertical: 10 },
-  activityIconCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  activityTextCol: { flex: 1 },
-  activityTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  activityTitle: { fontSize: 12.5, fontFamily: 'Inter_700Bold', color: colors.primary },
-  activityTime: { fontSize: 9.5, color: '#888', fontFamily: 'Inter_400Regular' },
-  activityDesc: { fontSize: 11.5, color: '#555', fontFamily: 'Inter_400Regular' },
-  activityLineDivider: { height: 1, backgroundColor: '#F3F4F6', marginLeft: 38 },
+
 
   // Modal structure
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },

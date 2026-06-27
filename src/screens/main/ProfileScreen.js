@@ -86,6 +86,7 @@ export default function ProfileScreen({ navigation }) {
     whatsApp: '+91 98765 43210',
     address: '102, Innovation Hub, S.V. Road, Kandivali West, Mumbai - 400067',
     aboutBusiness: 'Oswal Ventures is a technology solutions company specializing in building scalable mobile applications, customized ERP solutions, and cloud migration services for growing enterprises.',
+    lookingFor: 'Seeking strategic partnerships with tech startups, investors, and corporate clients looking for software development services.',
     socialLinkedIn: 'linkedin.com/in/yashoswal',
     socialInstagram: 'instagram.com/yash_oswal',
     avatarColor: colors.accent,
@@ -260,8 +261,23 @@ export default function ProfileScreen({ navigation }) {
 
   const handleShareProfile = async () => {
     try {
+      const name = profile.fullName || 'Member';
+      const designation = profile.designation || '';
+      const businessName = profile.businessName || '';
+      
+      let titleSection = '';
+      if (designation && businessName) {
+        titleSection = ` (${designation} of ${businessName})`;
+      } else if (designation) {
+        titleSection = ` (${designation})`;
+      } else if (businessName) {
+        titleSection = ` (of ${businessName})`;
+      }
+
+      const slug = name.toLowerCase().replace(/\s+/g, '');
+      
       await Share.share({
-        message: `Connect with Yash Oswal (Founder & CEO of Oswal Ventures) on BizNex! Download the app: https://biznex.app/profile/yashoswal`,
+        message: `Connect with ${name}${titleSection} on BizNex! Download the app: https://biznex.app/profile/${slug}`,
       });
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -549,7 +565,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* ABOUT BUSINESS SECTION */}
           <InfoCard>
-            <SectionHeader title="About Business 🎯" />
+            <SectionHeader title="About Business" />
             {!isEditing ? (
               <Text style={s.descTxt}>{profile.aboutBusiness || 'Add details about your company and what you do...'}</Text>
             ) : (
@@ -563,9 +579,25 @@ export default function ProfileScreen({ navigation }) {
             )}
           </InfoCard>
 
+          {/* WHAT I'M LOOKING FOR SECTION */}
+          <InfoCard>
+            <SectionHeader title="What I'm Looking For" />
+            {!isEditing ? (
+              <Text style={s.descTxt}>{profile.lookingFor || 'Describe what kind of business connections you need...'}</Text>
+            ) : (
+              <EditField 
+                label="What I'm Looking For" 
+                value={draft.lookingFor} 
+                onChangeText={(val) => handleFieldChange('lookingFor', val)} 
+                placeholder="What kind of business connections do you need?"
+                multiline
+              />
+            )}
+          </InfoCard>
+
           {/* BUSINESS VERIFICATION SECTION */}
           <InfoCard>
-            <SectionHeader title="Business Verification 🛡️" />
+            <SectionHeader title="Business Verification" />
             <View style={s.verificationContainer}>
               <View style={s.verificationRow}>
                 <Ionicons 
@@ -618,7 +650,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* SOCIAL LINKS SECTION */}
           <InfoCard>
-            <SectionHeader title="Social Links 🌐" />
+            <SectionHeader title="Social Links" />
             {!isEditing ? (
               <View style={s.infoGrid}>
                 <InfoItem icon="logo-linkedin" label="LinkedIn" value={profile.socialLinkedIn} />
@@ -660,7 +692,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* BUSINESS INFORMATION SECTION */}
           <InfoCard>
-            <SectionHeader title="Business Information 💼" />
+            <SectionHeader title="Business Information" />
             {!isEditing ? (
               <View style={s.infoGrid}>
                 <InfoItem icon="business" label="Company Name" value={profile.businessName} />
@@ -708,7 +740,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* CONTACT INFORMATION SECTION */}
           <InfoCard>
-            <SectionHeader title="Contact Information 📞" />
+            <SectionHeader title="Contact Information" />
             {!isEditing ? (
               <View style={s.infoGrid}>
                 <InfoItem icon="mail" label="Email" value={profile.email} />
@@ -752,7 +784,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* MEMBERSHIP INFO SECTION */}
           <InfoCard>
-            <SectionHeader title="Membership Details 🏅" />
+            <SectionHeader title="Membership Details" />
             <View style={s.membershipRow}>
               <View>
                 <Text style={s.membershipLabel}>Member Since</Text>
@@ -784,7 +816,7 @@ export default function ProfileScreen({ navigation }) {
           {/* SHARE & INVITE ACTIONS SECTION */}
           {!isEditing && (
             <InfoCard>
-              <SectionHeader title="Quick Actions ⚡" />
+              <SectionHeader title="Quick Actions" />
               <View style={s.actionsRow}>
                 <TouchableOpacity style={s.actionRowButton} onPress={handleShareProfile}>
                   <Ionicons name="share-social-outline" size={20} color={colors.primary} style={{ marginRight: 8 }} />

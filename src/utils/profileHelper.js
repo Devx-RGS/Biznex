@@ -40,8 +40,7 @@ export const DEFAULT_DISPLAY_PROFILE = {
   avatarColor: '#C9A84C', // colors.accent fallback
   chapter: 'Kandivali',
   membershipStatus: 'Active Member',
-  profileViews: 248,
-  directoryAppearances: 512,
+  lookingFor: 'Seeking strategic partnerships with tech startups and investors.',
 };
 
 /**
