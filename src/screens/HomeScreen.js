@@ -69,7 +69,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity style={s.iconBtn} onPress={() => navigation.navigate('MemberDirectory')}>
             <Ionicons name="search-outline" size={22} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={s.avatarCircle} onPress={() => navigation.navigate('Profile')}>
+          <TouchableOpacity style={s.avatarCircle} onPress={() => navigation.navigate('MemberProfile', { isPreview: true })}>
             {profile?.profilePhoto ? (
               <Image source={{ uri: profile.profilePhoto }} style={s.avatarImg} />
             ) : (

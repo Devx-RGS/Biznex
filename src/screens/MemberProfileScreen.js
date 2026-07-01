@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -81,19 +82,91 @@ const InfoItem = ({ icon, label, value }) => (
 // ── Main Screen ──────────────────────────────────────────────────
 
 export default function MemberProfileScreen({ route, navigation }) {
-  const { member } = route.params || { 
-    member: { 
-      id: 'BN-00000', 
-      name: 'Guest Member', 
-      designation: 'Professional', 
-      business: 'Business Name', 
-      category: 'General', 
-      chapter: 'Main', 
-      initials: 'GM', 
-      color: colors.accent,
-      offer: 'Quality services and solutions for your business needs.'
-    } 
-  };
+  const isPreview = route.params?.isPreview || false;
+  const [member, setMember] = useState(null);
+
+  useEffect(() => {
+    if (!isPreview) {
+      const passedMember = route.params?.member || { 
+        id: 'BN-00000', 
+        name: 'Guest Member', 
+        designation: 'Professional', 
+        business: 'Business Name', 
+        category: 'General', 
+        chapter: 'Main', 
+        initials: 'GM', 
+        color: colors.accent,
+        offer: 'Quality services and solutions for your business needs.'
+      };
+      setMember(passedMember);
+    }
+  }, [route.params?.member, isPreview]);
+
+  useEffect(() => {
+    if (isPreview) {
+      const loadProfile = async () => {
+        try {
+          const stored = await AsyncStorage.getItem('userProfile');
+          const parsed = stored ? JSON.parse(stored) : null;
+          const DEFAULT_PROFILE = {
+            fullName: 'Yash Oswal',
+            designation: 'Founder & Managing Director',
+            businessName: 'Oswal Ventures',
+            category: 'IT & Technology',
+            industry: 'Software Development',
+            productService: 'Mobile Apps, Cloud ERP Systems',
+            chapter: 'Kandivali',
+            website: 'www.oswalventures.com',
+            email: 'yash@oswalventures.com',
+            phone: '+91 98765 43210',
+            whatsApp: '+91 98765 43210',
+            address: '102, Innovation Hub, S.V. Road, Kandivali West, Mumbai - 400067',
+            aboutBusiness: 'Oswal Ventures is a technology solutions company specializing in building scalable mobile applications, customized ERP solutions, and cloud migration services for growing enterprises.',
+            lookingFor: 'Seeking strategic partnerships with tech startups, investors, and corporate clients looking for software development services.',
+            socialLinkedIn: 'linkedin.com/in/yashoswal',
+            socialInstagram: 'instagram.com/yash_oswal',
+            avatarColor: colors.accent,
+            initials: 'YO',
+            profilePhoto: null,
+            lastRenewedDate: 'Jan 15, 2026',
+            renewalDueDate: 'Jan 15, 2027',
+          };
+          const profile = parsed ? { ...DEFAULT_PROFILE, ...parsed } : DEFAULT_PROFILE;
+          
+          setMember({
+            id: profile.id || '00000',
+            name: profile.fullName,
+            designation: profile.designation,
+            business: profile.businessName,
+            category: profile.category,
+            location: profile.location || 'Mumbai',
+            chapter: profile.chapter,
+            initials: profile.initials,
+            color: profile.avatarColor || colors.accent,
+            offer: profile.aboutBusiness,
+            keywords: profile.productService ? profile.productService.split(',').map(s => s.trim()) : ['Business', 'Growth', 'Network'],
+            whatsApp: profile.whatsApp || profile.phone || '',
+            linkedin: profile.socialLinkedIn || '',
+            instagram: profile.socialInstagram || '',
+            website: profile.website || '',
+            email: profile.email || '',
+            lookingFor: profile.lookingFor || 'Looking to connect with direct decision makers, HR heads and business owners for networking and collaborations.',
+            profilePhoto: profile.profilePhoto || null,
+            memberSince: profile.lastRenewedDate,
+            renewalDate: profile.renewalDueDate,
+          });
+        } catch (e) {
+          console.error('Error loading preview profile:', e);
+        }
+      };
+
+      loadProfile();
+      const unsubscribe = navigation.addListener('focus', () => {
+        loadProfile();
+      });
+      return unsubscribe;
+    }
+  }, [navigation, isPreview]);
 
   // Open a social link safely; silently does nothing if URL is unavailable
   const openSocialLink = async (url) => {
@@ -103,6 +176,14 @@ export default function MemberProfileScreen({ route, navigation }) {
       if (supported) Linking.openURL(url);
     } catch (_) {}
   };
+
+  if (!member) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
+      </View>
+    );
+  }
 
   const whatsappUrl  = member.whatsApp  ? `https://wa.me/${member.whatsApp.replace(/\D/g, '')}` : null;
   const linkedinUrl  = member.linkedin   ? (member.linkedin.startsWith('http') ? member.linkedin : `https://${member.linkedin}`) : null;
@@ -125,7 +206,12 @@ export default function MemberProfileScreen({ route, navigation }) {
           <TouchableOpacity onPress={() => navigation.goBack()} style={s.headerBtn}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>Member Profile</Text>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={s.headerTitle}>{isPreview ? "My Profile" : "Member Profile"}</Text>
+            {isPreview && (
+              <Text style={s.headerSubtitle}>Preview your public profile</Text>
+            )}
+          </View>
           <TouchableOpacity style={s.headerBtn}>
             <Ionicons name="share-outline" size={24} color="#fff" />
           </TouchableOpacity>
@@ -135,7 +221,11 @@ export default function MemberProfileScreen({ route, navigation }) {
           {/* Hero Section */}
           <View style={s.hero}>
             <View style={[s.avatarLarge, { backgroundColor: member.color }]}>
-              <Text style={s.avatarLargeTxt}>{member.initials}</Text>
+              {member.profilePhoto ? (
+                <Image source={{ uri: member.profilePhoto }} style={s.avatarLargeImg} />
+              ) : (
+                <Text style={s.avatarLargeTxt}>{member.initials}</Text>
+              )}
             </View>
             <Text style={s.heroName}>{member.name}</Text>
             <Text style={s.heroDesig}>{member.designation} · {member.business}</Text>
@@ -164,15 +254,26 @@ export default function MemberProfileScreen({ route, navigation }) {
 
           {/* Quick Actions */}
           <View style={s.actionRow}>
-            <TouchableOpacity style={s.primaryActionBtn}>
-              <Text style={s.primaryActionTxt}>Connect 🤝</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.secondaryActionBtn}>
-              <Text style={s.secondaryActionTxt}>Message 💬</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.secondaryActionBtn}>
-              <Text style={s.secondaryActionTxt}>Refer 📨</Text>
-            </TouchableOpacity>
+            {isPreview ? (
+              <TouchableOpacity 
+                style={s.primaryActionBtn} 
+                onPress={() => navigation.navigate('Main', { screen: 'Profile' })}
+              >
+                <Text style={s.primaryActionTxt}>Edit My Profile</Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity style={s.primaryActionBtn}>
+                  <Text style={s.primaryActionTxt}>Connect 🤝</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.secondaryActionBtn}>
+                  <Text style={s.secondaryActionTxt}>Message 💬</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.secondaryActionBtn}>
+                  <Text style={s.secondaryActionTxt}>Refer 📨</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
 
           {/* About Card */}
@@ -183,9 +284,9 @@ export default function MemberProfileScreen({ route, navigation }) {
               <InfoItem icon="briefcase" label="Industry" value={member.category} />
               <InfoItem icon="people" label="Employees" value="10-50" />
               <InfoItem icon="location" label="Location" value={`${member.location || 'Mumbai'}, ${member.chapter}`} />
-              <InfoItem icon="globe" label="Website" value="www.biznex.app" />
-              <InfoItem icon="mail" label="Email" value="contact@member.com" />
-              <InfoItem icon="logo-whatsapp" label="WhatsApp" value="+91 9876543210" />
+              <InfoItem icon="globe" label="Website" value={member.website || "www.biznex.app"} />
+              <InfoItem icon="mail" label="Email" value={member.email || "contact@member.com"} />
+              <InfoItem icon="logo-whatsapp" label="WhatsApp" value={member.whatsApp || "+91 9876543210"} />
               <InfoItem icon="document-text" label="GST Status" value="Registered" />
             </View>
           </InfoCard>
@@ -202,7 +303,7 @@ export default function MemberProfileScreen({ route, navigation }) {
             
             <View style={{ marginTop: 20 }}>
               <SectionHeader title="What I'm Looking For 🔍" />
-              <Text style={s.descTxt}>Looking to connect with direct decision makers, HR heads and business owners for networking and collaborations.</Text>
+              <Text style={s.descTxt}>{member.lookingFor || 'Looking to connect with direct decision makers, HR heads and business owners for networking and collaborations.'}</Text>
             </View>
           </InfoCard>
 
@@ -275,7 +376,7 @@ export default function MemberProfileScreen({ route, navigation }) {
             <View style={s.membershipRow}>
               <View>
                 <Text style={s.membershipLabel}>Member Since</Text>
-                <Text style={s.membershipVal}>Jan 2025</Text>
+                <Text style={s.membershipVal}>{member.memberSince || 'Jan 2025'}</Text>
               </View>
               <View style={{ alignItems: 'center' }}>
                 <Text style={s.membershipLabel}>Membership Status</Text>
@@ -283,7 +384,7 @@ export default function MemberProfileScreen({ route, navigation }) {
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={s.membershipLabel}>Renewal Date</Text>
-                <Text style={s.membershipVal}>Jan 2026</Text>
+                <Text style={s.membershipVal}>{member.renewalDate || 'Jan 2026'}</Text>
               </View>
             </View>
           </InfoCard>
@@ -301,12 +402,14 @@ const s = StyleSheet.create({
   header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: colors.primary },
   headerBtn:      { padding: 4 },
   headerTitle:    { color: '#fff', fontFamily: 'Inter_700Bold', fontSize: 18 },
+  headerSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 2 },
   scrollContent:  { backgroundColor: '#F8F9FB' },
   
   // Hero
   hero:           { backgroundColor: colors.primary, alignItems: 'center', paddingBottom: 30, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
   avatarLarge:    { width: 90, height: 90, borderRadius: 45, justifyContent: 'center', alignItems: 'center', marginBottom: 15, borderWidth: 3, borderColor: 'rgba(255,255,255,0.2)' },
   avatarLargeTxt: { color: '#fff', fontSize: 32, fontFamily: 'Inter_700Bold' },
+  avatarLargeImg: { width: '100%', height: '100%', borderRadius: 45 },
   heroName:       { color: '#fff', fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
   heroDesig:      { color: colors.accent, fontSize: 14, fontFamily: 'Inter_600SemiBold', marginBottom: 15 },
   heroChips:      { flexDirection: 'row', gap: 10, marginBottom: 15 },
