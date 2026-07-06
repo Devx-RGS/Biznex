@@ -7,7 +7,6 @@ import {
   TouchableOpacity, 
   Dimensions, 
   Platform, 
-  Alert,
   Modal,
   TextInput,
   Linking
@@ -16,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import PrimaryButton from '../../components/PrimaryButton';
+import CustomAlertModal from '../../components/CustomAlertModal';
+import { useAlert } from '../../utils/useAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -109,6 +110,10 @@ export default function SupportScreen({ navigation }) {
   // Issue/Feedback inputs
   const [inputText, setInputText] = useState('');
   const [feedbackRating, setFeedbackRating] = useState(5);
+
+  // Custom alert state
+  const { alertConfig, showAlert, hideAlert } = useAlert();
+  const Alert = { alert: showAlert };
 
   const handleEmailUs = async () => {
     const url = `mailto:${SUPPORT_CONTACT.email}`;
@@ -445,6 +450,14 @@ export default function SupportScreen({ navigation }) {
             </View>
           </View>
         </Modal>
+
+        <CustomAlertModal
+          visible={alertConfig.visible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          buttons={alertConfig.buttons}
+          onClose={hideAlert}
+        />
 
       </SafeAreaView>
     </View>

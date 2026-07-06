@@ -19,7 +19,7 @@ const FilterModal = ({ type, value, onSelect, onClose }) => (
     <View style={fm.sheet}>
       <View style={fm.handle} />
       <Text style={fm.title}>
-        {type === 'location' ? '📍 Location' : type === 'category' ? '🏷️ Category' : type === 'chapter' ? '🏙️ Chapter' : '🔍 Product / Service'}
+        {type === 'location' ? 'Location' : type === 'category' ? 'Category' : type === 'chapter' ? 'Chapter' : 'Product / Service'}
       </Text>
       {type && FILTER_OPTIONS[type].map(opt => (
         <TouchableOpacity key={opt} style={[fm.option, value === opt && fm.optionActive]} onPress={() => { onSelect(opt); onClose(); }}>
@@ -100,10 +100,10 @@ const EmptyState = ({ onClear }) => (
 
 // ── Filter Chip Definitions ───────────────────────────────────────
 const FILTER_DEFS = [
-  { key: 'location', icon: '📍', label: 'Location' },
-  { key: 'category', icon: '🏷️', label: 'Category' },
-  { key: 'chapter',  icon: '🏙️', label: 'Chapter'  },
-  { key: 'service',  icon: '🔍', label: 'Product/Service' },
+  { key: 'location', icon: 'location-outline', label: 'Location' },
+  { key: 'category', icon: 'pricetag-outline', label: 'Category' },
+  { key: 'chapter',  icon: 'business-outline', label: 'Chapter'  },
+  { key: 'service',  icon: 'search-outline', label: 'Product/Service' },
 ];
 
 // ── Main Screen ──────────────────────────────────────────────────
@@ -171,8 +171,9 @@ export default function MemberDirectoryScreen({ navigation }) {
                 style={[s.chip, active && s.chipActive]}
                 onPress={() => setModalType(f.key)}
               >
+                <Ionicons name={f.icon} size={14} color={active ? colors.primary : '#fff'} style={{ marginRight: 4 }} />
                 <Text style={[s.chipTxt, active && s.chipTxtActive]} numberOfLines={1}>
-                  {f.icon} {val || f.label}
+                  {val || f.label}
                 </Text>
                 {active && (
                   <TouchableOpacity onPress={() => clearFilter(f.key)} style={{ marginLeft: 5 }}>

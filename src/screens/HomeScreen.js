@@ -61,11 +61,6 @@ export default function HomeScreen({ navigation }) {
       <View style={s.header}>
         <Text style={s.logo}>BizNex</Text>
         <View style={s.headerRight}>
-          {['bookmark-outline', 'calendar-outline'].map(icon => (
-            <TouchableOpacity key={icon} style={s.iconBtn}>
-              <Ionicons name={icon} size={22} color="#fff" />
-            </TouchableOpacity>
-          ))}
           <TouchableOpacity style={s.iconBtn} onPress={() => navigation.navigate('MemberDirectory')}>
             <Ionicons name="search-outline" size={22} color="#fff" />
           </TouchableOpacity>

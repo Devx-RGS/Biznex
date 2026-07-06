@@ -9,7 +9,7 @@ export function WelcomeMembersSection() {
   const navigation = useNavigation();
   return (
     <View style={s.section}>
-      <SectionHeader title="👋 Welcome New Members" onSeeAll={() => {}} />
+      <SectionHeader title="Welcome New Members" onSeeAll={() => {}} />
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} contentContainerStyle={s.hList}>
         {NEW_MEMBERS.map(m => (
           <TouchableOpacity key={m.id} style={s.memberCard} onPress={() => navigation.navigate('MemberProfile', { member: m })}>
@@ -31,7 +31,7 @@ export function FeaturedMembersSection() {
   const navigation = useNavigation();
   return (
     <View style={s.section}>
-      <SectionHeader title="⭐ Featured Members" onSeeAll={() => {}} />
+      <SectionHeader title="Featured Members" onSeeAll={() => {}} />
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} contentContainerStyle={s.hList}>
         {FEATURED.map(m => (
           <TouchableOpacity key={m.id} style={s.featCard} onPress={() => navigation.navigate('MemberProfile', { member: m })}>

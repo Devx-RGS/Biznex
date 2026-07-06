@@ -9,9 +9,9 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 const Tab = createBottomTabNavigator();
 
 const TAB_CONFIG = [
-  { name: 'Home',      label: 'Home',       ai: 'home',              ii: 'home-outline',              component: HomeScreen      },
   { name: 'Updates',   label: 'Updates',    ai: 'notifications',     ii: 'notifications-outline',     component: UpdatesScreen   },
   { name: 'WorldFeed', label: 'World Feed', ai: 'globe',             ii: 'globe-outline',             component: WorldFeedScreen },
+  { name: 'Home',      label: 'Home',       ai: 'home',              ii: 'home-outline',              component: HomeScreen      },
   { name: 'Enquiries', label: 'Enquiries',  ai: 'chatbubbles',       ii: 'chatbubbles-outline',       component: EnquiriesScreen },
   { name: 'Profile',   label: 'Profile',    ai: 'person',            ii: 'person-outline',            component: ProfileScreen   },
 ];
@@ -19,6 +19,8 @@ const TAB_CONFIG = [
 export default function MainTabNavigator() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
+      backBehavior="initialRoute"
       screenOptions={({ route }) => {
         const tab = TAB_CONFIG.find(t => t.name === route.name);
         return {

@@ -182,13 +182,13 @@ export default function PerformanceScreen({ navigation }) {
               icon="checkmark-circle-outline" 
               label="Profile Completion" 
               value={`${performanceData.profileCompletion}%`}
-              trend="⚡ Ready for business leads"
+              trend="Ready for business leads"
             />
             <MetricCard 
               icon="bookmark-outline" 
               label="Vendor Saves" 
               value={performanceData.vendorSaves === 0 ? '—' : performanceData.vendorSaves}
-              trend={performanceData.vendorSaves === 0 ? '🔖 No members have saved your profile yet.' : '⭐ Saved as preferred vendor'}
+              trend={performanceData.vendorSaves === 0 ? 'No members have saved your profile yet.' : 'Saved as preferred vendor'}
             />
           </View>
 

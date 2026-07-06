@@ -264,13 +264,13 @@ export default function MemberProfileScreen({ route, navigation }) {
             ) : (
               <>
                 <TouchableOpacity style={s.primaryActionBtn}>
-                  <Text style={s.primaryActionTxt}>Connect 🤝</Text>
+                  <Text style={s.primaryActionTxt}>Connect</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.secondaryActionBtn}>
-                  <Text style={s.secondaryActionTxt}>Message 💬</Text>
+                  <Text style={s.secondaryActionTxt}>Message</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.secondaryActionBtn}>
-                  <Text style={s.secondaryActionTxt}>Refer 📨</Text>
+                  <Text style={s.secondaryActionTxt}>Refer</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -293,7 +293,7 @@ export default function MemberProfileScreen({ route, navigation }) {
 
           {/* What I Offer / Need */}
           <InfoCard>
-            <SectionHeader title="What I Offer 🎯" />
+            <SectionHeader title="What I Offer" />
             <Text style={s.descTxt}>{member.offer}</Text>
             <View style={s.goldChipsRow}>
               {(member.keywords || ['Business', 'Growth', 'Network']).map(k => (
@@ -302,7 +302,7 @@ export default function MemberProfileScreen({ route, navigation }) {
             </View>
             
             <View style={{ marginTop: 20 }}>
-              <SectionHeader title="What I'm Looking For 🔍" />
+              <SectionHeader title="What I'm Looking For" />
               <Text style={s.descTxt}>{member.lookingFor || 'Looking to connect with direct decision makers, HR heads and business owners for networking and collaborations.'}</Text>
             </View>
           </InfoCard>
@@ -319,7 +319,7 @@ export default function MemberProfileScreen({ route, navigation }) {
           {/* Achievements & Best Connects */}
           <InfoCard>
             <View style={{ marginBottom: 20 }}>
-              <SectionHeader title="Achievements 🏆" />
+              <SectionHeader title="Achievements" />
               <View style={s.badgesRow}>
                 <AchievementBadge icon="star" label="Star Member" />
                 <AchievementBadge icon="trending-up" label="Top Referrer" />
@@ -336,7 +336,7 @@ export default function MemberProfileScreen({ route, navigation }) {
 
           {/* Testimonials */}
           <View style={s.testimonialsSection}>
-            <SectionHeader title="What Members Say 💬" />
+            <SectionHeader title="What Members Say" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.testimonialScroll}>
               <TestimonialCard 
                 name="Anjali Singh" 
@@ -361,7 +361,7 @@ export default function MemberProfileScreen({ route, navigation }) {
 
           {/* Media Gallery */}
           <View style={s.gallerySection}>
-            <SectionHeader title="Work Gallery 📸" />
+            <SectionHeader title="Work Gallery" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.galleryScroll}>
               {[1, 2, 3, 4].map(i => (
                 <View key={i} style={s.galleryBox}>
@@ -380,7 +380,7 @@ export default function MemberProfileScreen({ route, navigation }) {
               </View>
               <View style={{ alignItems: 'center' }}>
                 <Text style={s.membershipLabel}>Membership Status</Text>
-                <Text style={s.statusActive}>Active ✅</Text>
+                <Text style={s.statusActive}>Active</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={s.membershipLabel}>Renewal Date</Text>

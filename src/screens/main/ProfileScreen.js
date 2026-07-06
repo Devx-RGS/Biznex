@@ -9,7 +9,6 @@ import {
   Image, 
   Platform, 
   Dimensions, 
-  Alert, 
   Modal,
   Share
 } from 'react-native';
@@ -18,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
+import CustomAlertModal from '../../components/CustomAlertModal';
+import { useAlert } from '../../utils/useAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -110,6 +111,10 @@ export default function ProfileScreen({ navigation }) {
 
   // Modal display state
   const [viewCertVisible, setViewCertVisible] = useState(false);
+
+  // Custom alert state
+  const { alertConfig, showAlert, hideAlert } = useAlert();
+  const Alert = { alert: showAlert };
 
   // Load from AsyncStorage
   const loadProfileFromStorage = async () => {
@@ -792,7 +797,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
               <View style={{ alignItems: 'center' }}>
                 <Text style={s.membershipLabel}>Status</Text>
-                <Text style={s.statusActive}>Active ✅</Text>
+                <Text style={s.statusActive}>Active</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={s.membershipLabel}>Renewal Due Date</Text>
@@ -838,10 +843,10 @@ export default function ProfileScreen({ navigation }) {
                 <Ionicons name="log-out-outline" size={20} color={colors.primary} style={{ marginRight: 8 }} />
                 <Text style={s.dangerButtonText}>Logout</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity style={[s.dangerButton, s.deactivateButton]} onPress={handleDeactivate}>
-                <Ionicons name="trash-outline" size={20} color={colors.error} style={{ marginRight: 8 }} />
-                <Text style={[s.dangerButtonText, { color: colors.error }]}>Deactivate Account</Text>
+
+              <TouchableOpacity style={s.deactivateButton} onPress={handleDeactivate}>
+                  <Ionicons name="warning-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={s.deactivateButtonText}>Deactivate Account</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -926,6 +931,14 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
         </Modal>
+
+        <CustomAlertModal
+          visible={alertConfig.visible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          buttons={alertConfig.buttons}
+          onClose={hideAlert}
+        />
 
       </SafeAreaView>
     </View>
@@ -1093,5 +1106,7 @@ const s = StyleSheet.create({
   dangerZone: { marginHorizontal: 16, marginTop: 12, marginBottom: 24, gap: 10 },
   dangerButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 12, height: 48, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3, borderWidth: 1, borderColor: '#E5E7EB' },
   dangerButtonText: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.primary },
-  deactivateButton: { borderColor: 'rgba(229,57,53,0.2)', backgroundColor: 'rgba(229,57,53,0.03)' }
+
+  deactivateButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.error, borderRadius: 12, height: 48, shadowColor: colors.error, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5, borderWidth: 0 },
+  deactivateButtonText: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
 });

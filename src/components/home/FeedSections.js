@@ -10,7 +10,7 @@ const RANK_COLORS = ['#C9A84C', '#9ba5ad', '#cd7f32', '#8A9BB0', '#8A9BB0'];
 export function BusinessGiversSection() {
   return (
     <View style={s.section}>
-      <SectionHeader title="💰 Recent Business Givers" onSeeAll={() => {}} />
+      <SectionHeader title="Recent Business Givers" onSeeAll={() => {}} />
       <View style={s.vList}>
         {GIVERS.map(g => (
           <View key={g.id} style={s.giverCard}>
@@ -30,7 +30,7 @@ export function BusinessGiversSection() {
             <View style={s.giverBottom}>
               <View style={s.catChip}><Text style={s.catChipTxt}>{g.cat}</Text></View>
               <Text style={s.time}>{g.time}</Text>
-              <TouchableOpacity style={s.thanksBtn}><Text style={s.thanksTxt}>Say Thanks 🙏</Text></TouchableOpacity>
+              <TouchableOpacity style={s.thanksBtn}><Text style={s.thanksTxt}>Say Thanks</Text></TouchableOpacity>
             </View>
           </View>
         ))}
@@ -42,7 +42,7 @@ export function BusinessGiversSection() {
 export function TopMembersSection() {
   return (
     <View style={s.section}>
-      <SectionHeader title="🏆 Top Active Members" onSeeAll={() => {}} />
+      <SectionHeader title="Top Active Members" onSeeAll={() => {}} />
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} contentContainerStyle={s.hList}>
         {TOP_MEMBERS.map(m => (
           <View key={m.id} style={s.topCard}>
@@ -62,7 +62,7 @@ export function TopMembersSection() {
 export function RecentMeetsSection() {
   return (
     <View style={[s.section, { marginBottom: 100 }]}>
-      <SectionHeader title="☕ Recent Meets" onSeeAll={() => {}} />
+      <SectionHeader title="Recent Meets" onSeeAll={() => {}} />
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} contentContainerStyle={s.hList}>
         {MEETS.map(m => (
           <View key={m.id} style={s.meetCard}>
