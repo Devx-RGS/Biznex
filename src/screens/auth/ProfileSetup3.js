@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import PrimaryButton from '../../components/PrimaryButton';
 import StepIndicator from '../../components/StepIndicator';
+import { useUser } from '../../context/UserContext';
 
 const ProfileSetup3 = ({ route, navigation }) => {
+  const { updateProfile } = useUser();
   const { setupData = {} } = route.params || {};
   const [form, setForm] = useState({
     offer: '',
@@ -63,9 +64,9 @@ const ProfileSetup3 = ({ route, navigation }) => {
     };
 
     try {
-      await AsyncStorage.setItem('userProfile', JSON.stringify(finalProfile));
+      await updateProfile(finalProfile);
     } catch (e) {
-      console.error('Failed to save profile in AsyncStorage:', e);
+      console.error('Failed to save profile via context:', e);
     }
 
     navigation.reset({

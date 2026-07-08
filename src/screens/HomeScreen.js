@@ -2,41 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../constants/colors';
 import BannerSection from '../components/home/BannerSection';
 import { WelcomeMembersSection, FeaturedMembersSection } from '../components/home/MemberSections';
 import { BusinessGiversSection, TopMembersSection, RecentMeetsSection } from '../components/home/FeedSections';
 import { FAB_ACTIONS } from '../data/homeData';
 import { calculateProfileCompletion, getMissingFields } from '../utils/profileHelper';
+import { useUser } from '../context/UserContext';
 
 export default function HomeScreen({ navigation }) {
+  const { profile } = useUser();
   const [fabOpen, setFabOpen] = useState(false);
   const fabAnim = useRef(new Animated.Value(0)).current;
-  const [profile, setProfile] = useState(null);
   const [isDismissed, setIsDismissed] = useState(false);
   const [dismissedPercentage, setDismissedPercentage] = useState(null);
-
-  const loadProfile = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('userProfile');
-      if (stored) {
-        setProfile(JSON.parse(stored));
-      } else {
-        setProfile(null);
-      }
-    } catch (e) {
-      console.error('Error loading profile in HomeScreen:', e);
-    }
-  };
-
-  useEffect(() => {
-    loadProfile();
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadProfile();
-    });
-    return unsubscribe;
-  }, [navigation]);
 
   const completionPercentage = calculateProfileCompletion(profile);
   const missingFields = getMissingFields(profile);

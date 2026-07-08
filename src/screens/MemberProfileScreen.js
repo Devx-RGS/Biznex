@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../constants/colors';
+import { useUser } from '../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -82,6 +82,7 @@ const InfoItem = ({ icon, label, value }) => (
 // ── Main Screen ──────────────────────────────────────────────────
 
 export default function MemberProfileScreen({ route, navigation }) {
+  const { profile } = useUser();
   const isPreview = route.params?.isPreview || false;
   const [member, setMember] = useState(null);
 
@@ -99,74 +100,56 @@ export default function MemberProfileScreen({ route, navigation }) {
         offer: 'Quality services and solutions for your business needs.'
       };
       setMember(passedMember);
-    }
-  }, [route.params?.member, isPreview]);
-
-  useEffect(() => {
-    if (isPreview) {
-      const loadProfile = async () => {
-        try {
-          const stored = await AsyncStorage.getItem('userProfile');
-          const parsed = stored ? JSON.parse(stored) : null;
-          const DEFAULT_PROFILE = {
-            fullName: 'Yash Oswal',
-            designation: 'Founder & Managing Director',
-            businessName: 'Oswal Ventures',
-            category: 'IT & Technology',
-            industry: 'Software Development',
-            productService: 'Mobile Apps, Cloud ERP Systems',
-            chapter: 'Kandivali',
-            website: 'www.oswalventures.com',
-            email: 'yash@oswalventures.com',
-            phone: '+91 98765 43210',
-            whatsApp: '+91 98765 43210',
-            address: '102, Innovation Hub, S.V. Road, Kandivali West, Mumbai - 400067',
-            aboutBusiness: 'Oswal Ventures is a technology solutions company specializing in building scalable mobile applications, customized ERP solutions, and cloud migration services for growing enterprises.',
-            lookingFor: 'Seeking strategic partnerships with tech startups, investors, and corporate clients looking for software development services.',
-            socialLinkedIn: 'linkedin.com/in/yashoswal',
-            socialInstagram: 'instagram.com/yash_oswal',
-            avatarColor: colors.accent,
-            initials: 'YO',
-            profilePhoto: null,
-            lastRenewedDate: 'Jan 15, 2026',
-            renewalDueDate: 'Jan 15, 2027',
-          };
-          const profile = parsed ? { ...DEFAULT_PROFILE, ...parsed } : DEFAULT_PROFILE;
-          
-          setMember({
-            id: profile.id || '00000',
-            name: profile.fullName,
-            designation: profile.designation,
-            business: profile.businessName,
-            category: profile.category,
-            location: profile.location || 'Mumbai',
-            chapter: profile.chapter,
-            initials: profile.initials,
-            color: profile.avatarColor || colors.accent,
-            offer: profile.aboutBusiness,
-            keywords: profile.productService ? profile.productService.split(',').map(s => s.trim()) : ['Business', 'Growth', 'Network'],
-            whatsApp: profile.whatsApp || profile.phone || '',
-            linkedin: profile.socialLinkedIn || '',
-            instagram: profile.socialInstagram || '',
-            website: profile.website || '',
-            email: profile.email || '',
-            lookingFor: profile.lookingFor || 'Looking to connect with direct decision makers, HR heads and business owners for networking and collaborations.',
-            profilePhoto: profile.profilePhoto || null,
-            memberSince: profile.lastRenewedDate,
-            renewalDate: profile.renewalDueDate,
-          });
-        } catch (e) {
-          console.error('Error loading preview profile:', e);
-        }
+    } else {
+      const DEFAULT_PROFILE = {
+        fullName: 'Yash Oswal',
+        designation: 'Founder & Managing Director',
+        businessName: 'Oswal Ventures',
+        category: 'IT & Technology',
+        industry: 'Software Development',
+        productService: 'Mobile Apps, Cloud ERP Systems',
+        chapter: 'Kandivali',
+        website: 'www.oswalventures.com',
+        email: 'yash@oswalventures.com',
+        phone: '+91 98765 43210',
+        whatsApp: '+91 98765 43210',
+        address: '102, Innovation Hub, S.V. Road, Kandivali West, Mumbai - 400067',
+        aboutBusiness: 'Oswal Ventures is a technology solutions company specializing in building scalable mobile applications, customized ERP solutions, and cloud migration services for growing enterprises.',
+        lookingFor: 'Seeking strategic partnerships with tech startups, investors, and corporate clients looking for software development services.',
+        socialLinkedIn: 'linkedin.com/in/yashoswal',
+        socialInstagram: 'instagram.com/yash_oswal',
+        avatarColor: colors.accent,
+        initials: 'YO',
+        profilePhoto: null,
+        lastRenewedDate: 'Jan 15, 2026',
+        renewalDueDate: 'Jan 15, 2027',
       };
-
-      loadProfile();
-      const unsubscribe = navigation.addListener('focus', () => {
-        loadProfile();
+      const mergedProfile = profile ? { ...DEFAULT_PROFILE, ...profile } : DEFAULT_PROFILE;
+      
+      setMember({
+        id: mergedProfile.id || '00000',
+        name: mergedProfile.fullName,
+        designation: mergedProfile.designation,
+        business: mergedProfile.businessName,
+        category: mergedProfile.category,
+        location: mergedProfile.location || 'Mumbai',
+        chapter: mergedProfile.chapter,
+        initials: mergedProfile.initials,
+        color: mergedProfile.avatarColor || colors.accent,
+        offer: mergedProfile.aboutBusiness,
+        keywords: mergedProfile.productService ? mergedProfile.productService.split(',').map(s => s.trim()) : ['Business', 'Growth', 'Network'],
+        whatsApp: mergedProfile.whatsApp || mergedProfile.phone || '',
+        linkedin: mergedProfile.socialLinkedIn || '',
+        instagram: mergedProfile.socialInstagram || '',
+        website: mergedProfile.website || '',
+        email: mergedProfile.email || '',
+        lookingFor: mergedProfile.lookingFor || 'Looking to connect with direct decision makers, HR heads and business owners for networking and collaborations.',
+        profilePhoto: mergedProfile.profilePhoto || null,
+        memberSince: mergedProfile.lastRenewedDate,
+        renewalDate: mergedProfile.renewalDueDate,
       });
-      return unsubscribe;
     }
-  }, [navigation, isPreview]);
+  }, [route.params?.member, isPreview, profile]);
 
   // Open a social link safely; silently does nothing if URL is unavailable
   const openSocialLink = async (url) => {

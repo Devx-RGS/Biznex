@@ -14,11 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
 import CustomAlertModal from '../../components/CustomAlertModal';
 import { useAlert } from '../../utils/useAlert';
+import { useUser } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -102,12 +102,11 @@ export default function ProfileScreen({ navigation }) {
     companyLogo: null,
   };
 
-  // 1. Data Model state
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const { profile, updateProfile, clearProfile } = useUser();
 
   // Edit Mode state
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState({ ...profile });
+  const [draft, setDraft] = useState({ ...DEFAULT_PROFILE, ...profile });
 
   // Modal display state
   const [viewCertVisible, setViewCertVisible] = useState(false);
@@ -116,42 +115,21 @@ export default function ProfileScreen({ navigation }) {
   const { alertConfig, showAlert, hideAlert } = useAlert();
   const Alert = { alert: showAlert };
 
-  // Load from AsyncStorage
-  const loadProfileFromStorage = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('userProfile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const merged = { ...DEFAULT_PROFILE, ...parsed };
-        setProfile(merged);
-        setDraft(merged);
-      } else {
-        setProfile(DEFAULT_PROFILE);
-        setDraft(DEFAULT_PROFILE);
-      }
-    } catch (e) {
-      console.error('Error loading user profile:', e);
-      setProfile(DEFAULT_PROFILE);
-      setDraft(DEFAULT_PROFILE);
-    }
-  };
-
+  // Sync draft when profile changes or edit mode changes
   useEffect(() => {
-    loadProfileFromStorage();
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadProfileFromStorage();
-    });
-    return unsubscribe;
-  }, [navigation]);
+    if (!isEditing) {
+      setDraft({ ...DEFAULT_PROFILE, ...profile });
+    }
+  }, [profile, isEditing]);
 
   // Sync draft when entering edit mode
   const startEditing = () => {
-    setDraft({ ...profile });
+    setDraft({ ...DEFAULT_PROFILE, ...profile });
     setIsEditing(true);
   };
 
   const cancelEditing = () => {
-    setDraft({ ...profile }); // always reset draft to committed profile
+    setDraft({ ...DEFAULT_PROFILE, ...profile }); // always reset draft to committed profile
     setIsEditing(false);
   };
 
@@ -205,14 +183,13 @@ export default function ProfileScreen({ navigation }) {
     };
 
     try {
-      await AsyncStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+      await updateProfile(updatedProfile);
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully!');
     } catch (e) {
       console.error('Failed to save profile edits:', e);
+      Alert.alert('Error', 'Failed to save changes.');
     }
-
-    setProfile(updatedProfile);
-    setIsEditing(false);
-    Alert.alert('Success', 'Profile updated successfully!');
   };
 
   const handleFieldChange = (key, value) => {
@@ -240,7 +217,7 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
-  const simulateUploadSuccess = (source) => {
+  const simulateUploadSuccess = async (source) => {
     const mockFilename = `Biz_Reg_Certificate_${Math.floor(100 + Math.random() * 900)}.pdf`;
     
     // If in editing mode, update draft, otherwise update profile directly
@@ -251,11 +228,14 @@ export default function ProfileScreen({ navigation }) {
         certificateStatus: 'Pending Review'
       }));
     } else {
-      setProfile(prev => ({
-        ...prev,
-        certificateName: mockFilename,
-        certificateStatus: 'Pending Review'
-      }));
+      try {
+        await updateProfile({
+          certificateName: mockFilename,
+          certificateStatus: 'Pending Review'
+        });
+      } catch (e) {
+        console.error('Failed to update certificate status:', e);
+      }
     }
     Alert.alert('Upload Successful', `Certificate "${mockFilename}" has been uploaded via ${source} and is pending verification.`);
   };
@@ -313,16 +293,20 @@ export default function ProfileScreen({ navigation }) {
       [
         {
           text: 'Renew Now',
-          onPress: () => {
+          onPress: async () => {
             const nextYear = new Date().getFullYear() + 1;
             const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             
-            setProfile(prev => ({
-              ...prev,
-              lastRenewedDate: today,
-              renewalDueDate: `Jan 15, ${nextYear}`
-            }));
-            Alert.alert('Success', 'Membership renewed successfully! Validity extended.');
+            try {
+              await updateProfile({
+                lastRenewedDate: today,
+                renewalDueDate: `Jan 15, ${nextYear}`
+              });
+              Alert.alert('Success', 'Membership renewed successfully! Validity extended.');
+            } catch (e) {
+              console.error('Failed to renew membership:', e);
+              Alert.alert('Error', 'Failed to renew membership.');
+            }
           }
         },
         { text: 'Cancel', style: 'cancel' }
@@ -368,7 +352,7 @@ export default function ProfileScreen({ navigation }) {
                   style: 'destructive',
                   onPress: async () => {
                     try {
-                      await AsyncStorage.removeItem('userProfile');
+                      await clearProfile();
                     } catch (e) {
                       console.error('Failed to delete profile:', e);
                     }

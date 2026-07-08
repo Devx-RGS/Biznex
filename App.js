@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
+import { UserProvider } from './src/context/UserContext';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -21,9 +22,11 @@ export default function App() {
 
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+      <UserProvider>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </UserProvider>
     </SafeAreaProvider>
   );
 }

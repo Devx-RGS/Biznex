@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../constants/colors';
 import { calculateProfileCompletion } from '../../utils/profileHelper';
+import { useUser } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -57,7 +57,7 @@ const StatusBarBackground = () => (
 );
 
 export default function PerformanceScreen({ navigation }) {
-  const [profile, setProfile] = useState(null);
+  const { profile } = useUser();
   
   const [testimonials] = useState([
     { id: '1', name: 'Anjali Singh', initials: 'AS', rating: 5, date: 'June 18, 2026', text: 'Yash and his team delivered our software portal ahead of schedule. Extremely professional and communicative!' },
@@ -72,25 +72,6 @@ export default function PerformanceScreen({ navigation }) {
   ]);
 
   const [savedByMembers] = useState(['1', '2', '3', '4']);
-
-  const loadProfile = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('userProfile');
-      if (stored) {
-        setProfile(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error('Error loading profile in PerformanceScreen:', e);
-    }
-  };
-
-  useEffect(() => {
-    loadProfile();
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadProfile();
-    });
-    return unsubscribe;
-  }, [navigation]);
 
   const displayProfile = profile || {
     fullName: 'Yash Oswal',
