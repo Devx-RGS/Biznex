@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, Dimensions, Linking, Modal, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../constants/colors';
@@ -85,6 +85,7 @@ export default function MemberProfileScreen({ route, navigation }) {
   const { profile } = useUser();
   const isPreview = route.params?.isPreview || false;
   const [member, setMember] = useState(null);
+  const [galleryPreviewUri, setGalleryPreviewUri] = useState(null);
 
   useEffect(() => {
     if (!isPreview) {
@@ -99,7 +100,11 @@ export default function MemberProfileScreen({ route, navigation }) {
         color: colors.accent,
         offer: 'Quality services and solutions for your business needs.'
       };
-      setMember(passedMember);
+      const gallery = passedMember.workGallery || (passedMember.id === profile?.id ? profile?.workGallery : []) || [];
+      setMember({
+        ...passedMember,
+        workGallery: gallery,
+      });
     } else {
       const DEFAULT_PROFILE = {
         fullName: 'Yash Oswal',
@@ -123,6 +128,7 @@ export default function MemberProfileScreen({ route, navigation }) {
         profilePhoto: null,
         lastRenewedDate: 'Jan 15, 2026',
         renewalDueDate: 'Jan 15, 2027',
+        workGallery: [],
       };
       const mergedProfile = profile ? { ...DEFAULT_PROFILE, ...profile } : DEFAULT_PROFILE;
       
@@ -147,6 +153,7 @@ export default function MemberProfileScreen({ route, navigation }) {
         profilePhoto: mergedProfile.profilePhoto || null,
         memberSince: mergedProfile.lastRenewedDate,
         renewalDate: mergedProfile.renewalDueDate,
+        workGallery: mergedProfile.workGallery || [],
       });
     }
   }, [route.params?.member, isPreview, profile]);
@@ -158,6 +165,32 @@ export default function MemberProfileScreen({ route, navigation }) {
       const supported = await Linking.canOpenURL(url);
       if (supported) Linking.openURL(url);
     } catch (_) {}
+  };
+
+  const handleShare = async () => {
+    if (!member) return;
+    try {
+      const name = member.name || 'Member';
+      const designation = member.designation || '';
+      const businessName = member.business || '';
+      
+      let titleSection = '';
+      if (designation && businessName) {
+        titleSection = ` (${designation} of ${businessName})`;
+      } else if (designation) {
+        titleSection = ` (${designation})`;
+      } else if (businessName) {
+        titleSection = ` (of ${businessName})`;
+      }
+
+      const slug = name.toLowerCase().replace(/\s+/g, '');
+      
+      await Share.share({
+        message: `Connect with ${name}${titleSection} on BizNex! View profile: https://biznex.app/profile/${slug}`,
+      });
+    } catch (error) {
+      console.error('Error sharing member profile:', error);
+    }
   };
 
   if (!member) {
@@ -195,7 +228,7 @@ export default function MemberProfileScreen({ route, navigation }) {
               <Text style={s.headerSubtitle}>Preview your public profile</Text>
             )}
           </View>
-          <TouchableOpacity style={s.headerBtn}>
+          <TouchableOpacity style={s.headerBtn} onPress={handleShare}>
             <Ionicons name="share-outline" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -346,11 +379,19 @@ export default function MemberProfileScreen({ route, navigation }) {
           <View style={s.gallerySection}>
             <SectionHeader title="Work Gallery" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.galleryScroll}>
-              {[1, 2, 3, 4].map(i => (
-                <View key={i} style={s.galleryBox}>
-                  <Ionicons name="camera" size={32} color="#ccc" />
-                </View>
-              ))}
+              {member.workGallery && member.workGallery.length > 0 ? (
+                member.workGallery.map((imgUri, i) => (
+                  <TouchableOpacity key={i} activeOpacity={0.8} onPress={() => setGalleryPreviewUri(imgUri)}>
+                    <Image source={{ uri: imgUri }} style={s.galleryImage} />
+                  </TouchableOpacity>
+                ))
+              ) : (
+                [1, 2, 3, 4].map(i => (
+                  <View key={i} style={s.galleryBox}>
+                    <Ionicons name="camera" size={32} color="#ccc" />
+                  </View>
+                ))
+              )}
             </ScrollView>
           </View>
 
@@ -374,6 +415,31 @@ export default function MemberProfileScreen({ route, navigation }) {
 
           <View style={{ height: 40 }} />
         </ScrollView>
+
+        {/* Full-Screen Image Preview Modal */}
+        <Modal
+          visible={!!galleryPreviewUri}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setGalleryPreviewUri(null)}
+        >
+          <View style={s.imagePreviewOverlay}>
+            <TouchableOpacity 
+              style={s.imagePreviewCloseBtn} 
+              onPress={() => setGalleryPreviewUri(null)}
+            >
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+            {!!galleryPreviewUri && (
+              <Image 
+                source={{ uri: galleryPreviewUri }} 
+                style={s.imagePreviewFull} 
+                resizeMode="contain" 
+              />
+            )}
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </View>
   );
@@ -449,6 +515,12 @@ const s = StyleSheet.create({
   gallerySection: { paddingHorizontal: 16, marginBottom: 24 },
   galleryScroll:  { gap: 10 },
   galleryBox:     { width: 120, height: 120, borderRadius: 12, backgroundColor: '#E9ECEF', justifyContent: 'center', alignItems: 'center' },
+  galleryImage:   { width: 120, height: 120, borderRadius: 12 },
+
+  // Image Preview Modal Styles
+  imagePreviewOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.9)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  imagePreviewCloseBtn: { position: 'absolute', top: Platform.OS === 'ios' ? 50 : 25, right: 20, zIndex: 10, padding: 8, backgroundColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 20 },
+  imagePreviewFull: { width: '100%', height: '80%' },
   
   // Membership
   membershipCard: { paddingVertical: 20 },

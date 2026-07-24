@@ -101,6 +101,7 @@ export default function ProfileScreen({ navigation }) {
     savedMembers: ['2', '5'],
     profilePhoto: null,
     companyLogo: null,
+    workGallery: [],
   };
 
   const { profile, updateProfile, clearProfile } = useUser();
@@ -111,10 +112,94 @@ export default function ProfileScreen({ navigation }) {
 
   // Modal display state
   const [viewCertVisible, setViewCertVisible] = useState(false);
+  const [galleryPreviewUri, setGalleryPreviewUri] = useState(null);
 
   // Custom alert state
   const { alertConfig, showAlert, hideAlert } = useAlert();
   const Alert = { alert: showAlert };
+
+  // Work Gallery Handlers
+  const handleAddGalleryImage = async () => {
+    const currentGallery = draft.workGallery || [];
+    if (currentGallery.length >= 6) {
+      Alert.alert('Limit Reached', 'You can upload a maximum of 6 work gallery images.');
+      return;
+    }
+
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Denied', 'Permission to access media library is required.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions ? ImagePicker.MediaTypeOptions.Images : 'images',
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newUri = result.assets[0].uri;
+        setDraft(prev => ({
+          ...prev,
+          workGallery: [...(prev.workGallery || []), newUri]
+        }));
+      }
+    } catch (error) {
+      console.error('Error picking image for work gallery:', error);
+      Alert.alert('Error', 'Failed to pick image from gallery.');
+    }
+  };
+
+  const handleReplaceGalleryImage = async (index) => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Denied', 'Permission to access media library is required.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions ? ImagePicker.MediaTypeOptions.Images : 'images',
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newUri = result.assets[0].uri;
+        setDraft(prev => {
+          const updated = [...(prev.workGallery || [])];
+          updated[index] = newUri;
+          return { ...prev, workGallery: updated };
+        });
+      }
+    } catch (error) {
+      console.error('Error replacing image in work gallery:', error);
+      Alert.alert('Error', 'Failed to replace image.');
+    }
+  };
+
+  const handleDeleteGalleryImage = (index) => {
+    Alert.alert(
+      'Delete Image',
+      'Are you sure you want to delete this image from your work gallery?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            setDraft(prev => {
+              const updated = [...(prev.workGallery || [])];
+              updated.splice(index, 1);
+              return { ...prev, workGallery: updated };
+            });
+          }
+        }
+      ]
+    );
+  };
 
   // Sync draft when profile changes or edit mode changes
   useEffect(() => {
@@ -778,6 +863,81 @@ export default function ProfileScreen({ navigation }) {
             )}
           </InfoCard>
 
+          {/* WORK GALLERY SECTION */}
+          <InfoCard>
+            <View style={s.galleryHeaderRow}>
+              <SectionHeader title="Work Gallery" />
+              {isEditing && (
+                <Text style={s.galleryCountTxt}>
+                  {(draft.workGallery || []).length}/6 Images
+                </Text>
+              )}
+            </View>
+
+            {isEditing ? (
+              <View style={s.galleryGrid}>
+                {(draft.workGallery || []).map((imgUri, index) => (
+                  <View key={index} style={s.galleryGridItem}>
+                    <TouchableOpacity 
+                      activeOpacity={0.8} 
+                      onPress={() => setGalleryPreviewUri(imgUri)}
+                      style={s.galleryImageWrapper}
+                    >
+                      <Image source={{ uri: imgUri }} style={s.galleryGridImage} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={s.galleryDeleteBadge} 
+                      onPress={() => handleDeleteGalleryImage(index)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="close-circle" size={22} color={colors.error} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={s.galleryReplaceBadge} 
+                      onPress={() => handleReplaceGalleryImage(index)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="camera-outline" size={14} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+                {(draft.workGallery || []).length < 6 && (
+                  <TouchableOpacity 
+                    style={s.galleryAddBox} 
+                    onPress={handleAddGalleryImage}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add-circle-outline" size={28} color={colors.accent} />
+                    <Text style={s.galleryAddTxt}>Add Image</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              profile.workGallery && profile.workGallery.length > 0 ? (
+                <View style={s.galleryGrid}>
+                  {profile.workGallery.map((imgUri, index) => (
+                    <TouchableOpacity 
+                      key={index} 
+                      style={s.galleryGridItemView}
+                      activeOpacity={0.8}
+                      onPress={() => setGalleryPreviewUri(imgUri)}
+                    >
+                      <Image source={{ uri: imgUri }} style={s.galleryGridImage} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={s.emptyGalleryContainer}>
+                  <Ionicons name="images-outline" size={32} color="#C5CEE0" />
+                  <Text style={s.emptyGalleryTxt}>No work gallery images added yet.</Text>
+                </View>
+              )
+            )}
+          </InfoCard>
+
           {/* MEMBERSHIP INFO SECTION */}
           <InfoCard>
             <SectionHeader title="Membership Details" />
@@ -920,6 +1080,30 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={s.modalCloseBtnTxt}>Close Certificate</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </Modal>
+
+        {/* Full-Screen Image Preview Modal */}
+        <Modal
+          visible={!!galleryPreviewUri}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setGalleryPreviewUri(null)}
+        >
+          <View style={s.imagePreviewOverlay}>
+            <TouchableOpacity 
+              style={s.imagePreviewCloseBtn} 
+              onPress={() => setGalleryPreviewUri(null)}
+            >
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+            {!!galleryPreviewUri && (
+              <Image 
+                source={{ uri: galleryPreviewUri }} 
+                style={s.imagePreviewFull} 
+                resizeMode="contain" 
+              />
+            )}
           </View>
         </Modal>
 
@@ -1100,4 +1284,24 @@ const s = StyleSheet.create({
 
   deactivateButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.error, borderRadius: 12, height: 48, shadowColor: colors.error, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5, borderWidth: 0 },
   deactivateButtonText: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
+
+  // Work Gallery Styles
+  galleryHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  galleryCountTxt: { fontSize: 12, fontFamily: 'Inter_600SemiBold', color: '#888' },
+  galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  galleryGridItem: { width: (width - 32 - 36 - 20) / 3, height: 100, borderRadius: 10, position: 'relative' },
+  galleryGridItemView: { width: (width - 32 - 36 - 20) / 3, height: 100, borderRadius: 10, overflow: 'hidden' },
+  galleryImageWrapper: { width: '100%', height: '100%', borderRadius: 10, overflow: 'hidden' },
+  galleryGridImage: { width: '100%', height: '100%', borderRadius: 10 },
+  galleryDeleteBadge: { position: 'absolute', top: -6, right: -6, backgroundColor: '#fff', borderRadius: 12, zIndex: 5 },
+  galleryReplaceBadge: { position: 'absolute', bottom: 4, right: 4, backgroundColor: colors.primary, width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#fff', zIndex: 5 },
+  galleryAddBox: { width: (width - 32 - 36 - 20) / 3, height: 100, borderRadius: 10, backgroundColor: '#F3F4F6', borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
+  galleryAddTxt: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: colors.primary, marginTop: 4 },
+  emptyGalleryContainer: { alignItems: 'center', paddingVertical: 20 },
+  emptyGalleryTxt: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#888', marginTop: 6 },
+
+  // Image Preview Modal Styles
+  imagePreviewOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.9)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  imagePreviewCloseBtn: { position: 'absolute', top: Platform.OS === 'ios' ? 50 : 25, right: 20, zIndex: 10, padding: 8, backgroundColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 20 },
+  imagePreviewFull: { width: '100%', height: '80%' },
 });
