@@ -19,6 +19,7 @@ import { colors } from '../../constants/colors';
 import CustomAlertModal from '../../components/CustomAlertModal';
 import { useAlert } from '../../utils/useAlert';
 import { useUser } from '../../context/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -352,14 +353,16 @@ export default function ProfileScreen({ navigation }) {
                   style: 'destructive',
                   onPress: async () => {
                     try {
-                      await clearProfile();
+                      await AsyncStorage.removeItem('userProfile');
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Splash' }],
+                      });
+                      clearProfile();
                     } catch (e) {
                       console.error('Failed to delete profile:', e);
+                      Alert.alert('Error', 'Failed to deactivate account.');
                     }
-                    navigation.reset({
-                      index: 0,
-                      routes: [{ name: 'Splash' }],
-                    });
                   }
                 },
                 { text: 'Cancel', style: 'cancel' }
@@ -371,6 +374,10 @@ export default function ProfileScreen({ navigation }) {
       ]
     );
   };
+
+  if (!profile) {
+    return null;
+  }
 
   const displayData = isEditing ? draft : profile;
 
